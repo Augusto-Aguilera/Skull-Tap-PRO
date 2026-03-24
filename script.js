@@ -1,23 +1,33 @@
-const client = window.supabase.createClient("https://thkuxitmdfwthyadcytx.supabase.co", "sb_publishable_ifOy7_StfYvwy287J88FSA_l-LseoVd");
+const client = window.supabase.createClient("https://thkuxitmdfwthyadcytx.supabase.co", "TU_KEY_AQUÍ");
 
-// Referencias seguras
 const get = (id) => document.getElementById(id);
 let currentUser = null;
 let score = 0, time = 15, wallet = 0, multiplier = 1;
-let currentSkin = "var(--neon-mag)";
+let currentSkin = "var(--neon-magenta)"; // Corregí el nombre de la variable aquí
 let gameTimer, spawnTimer;
 
-// AUTH
-get("loginBtn").onclick = async () => {
-    const email = get("email").value;
-    const password = get("password").value;
-    const { data, error } = await client.auth.signInWithPassword({ email, password });
-    if (error) alert("Error: " + error.message);
-    else {
-        currentUser = data.user;
-        get("userStatus").innerText = "Conectado como: " + email.split('@')[0];
-        loadWallet();
+// USAMOS WINDOW.ONLOAD PARA ASEGURAR QUE LOS BOTONES EXISTAN
+window.onload = () => {
+    
+    // AUTH - LOGIN
+    if(get("loginBtn")) {
+        get("loginBtn").onclick = async () => {
+            const email = get("email").value;
+            const password = get("password").value;
+            const { data, error } = await client.auth.signInWithPassword({ email, password });
+            
+            if (error) alert("Error: " + error.message);
+            else {
+                currentUser = data.user;
+                get("userStatus").innerText = "Conectado como: " + email.split('@')[0];
+                loadWallet();
+            }
+        };
     }
+
+    // BOTONES DE NAVEGACIÓN
+    if(get("playBtn")) get("playBtn").onclick = startGame;
+    if(get("restartBtn")) get("restartBtn").onclick = startGame;
 };
 
 async function loadWallet() {
