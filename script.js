@@ -159,6 +159,26 @@ async function showRanking() {
         });
     }
 
+    async function saveScore() {
+    if (!currentUser) return; // Si no estás logueado, no guarda nada
+
+    const { error } = await client
+        .from('scores')
+        .insert([
+            { 
+                name: currentUser.email.split('@')[0], 
+                score: score, 
+                wallet: wallet 
+            }
+        ]);
+
+    if (error) {
+        console.error("Error guardando score:", error);
+    } else {
+        console.log("Puntaje guardado con éxito!");
+    }
+}
+
     // 3. Mostramos la pantalla de ranking
     get("rankingScreen").classList.add("active");
 }
