@@ -1,12 +1,12 @@
-const client = window.supabase.createClient("https://thkuxitmdfwthyadcytx.supabase.co", "TU_KEY_AQUÍ");
+const client = window.supabase.createClient("https://thkuxitmdfwthyadcytx.supabase.co", "sb_publishable_ifOy7_StfYvwy287J88FSA_l-LseoVd");
 
 const get = (id) => document.getElementById(id);
 let currentUser = null;
 let score = 0, time = 15, wallet = 0, multiplier = 1;
-let currentSkin = "var(--neon-magenta)"; // Corregí el nombre de la variable aquí
+let currentSkin = "var(--neon-magenta)"; 
 let gameTimer, spawnTimer;
 
-// USAMOS WINDOW.ONLOAD PARA ASEGURAR QUE LOS BOTONES EXISTAN
+// ESPERAR A QUE CARGUE LA WEB
 window.onload = () => {
     
     // AUTH - LOGIN
