@@ -48,6 +48,7 @@ window.onload = () => {
     // BOTONES DE NAVEGACIÓN
     if(get("playBtn")) get("playBtn").onclick = startGame;
     if(get("restartBtn")) get("restartBtn").onclick = startGame;
+    if(get("rankingBtn")) get("rankingBtn").onclick = showRanking;
 };
 
 async function loadWallet() {
