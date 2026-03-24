@@ -10,19 +10,37 @@ let gameTimer, spawnTimer;
 window.onload = () => {
     
     // AUTH - LOGIN
-    if(get("loginBtn")) {
+  if(get("loginBtn")) {
         get("loginBtn").onclick = async () => {
             const email = get("email").value;
             const password = get("password").value;
-            const { data, error } = await client.auth.signInWithPassword({ email, password });
-            
-            if (error) alert("Error: " + error.message);
-            else {
+
+            // 1. Intentamos entrar (Login)
+            let { data, error } = await client.auth.signInWithPassword({ email, password });
+
+            // 2. Si el usuario no existe, lo creamos (SignUp) automáticamente
+            if (error && (error.message.includes("Invalid login credentials") || error.status === 400)) {
+                const { data: signUpData, error: signUpError } = await client.auth.signUp({ email, password });
+                
+                if (signUpError) {
+                    alert("Error al registrar: " + signUpError.message);
+                    return;
+                }
+                alert("¡Cuenta creada! Ya puedes jugar.");
+                data = signUpData;
+                error = null;
+            }
+
+            // 3. Si todo salió bien, conectamos al usuario
+            if (error) {
+                alert("Error: " + error.message);
+            } else if (data.user) {
                 currentUser = data.user;
                 get("userStatus").innerText = "Conectado como: " + email.split('@')[0];
                 loadWallet();
             }
         };
+    }
     }
 
     // BOTONES DE NAVEGACIÓN
