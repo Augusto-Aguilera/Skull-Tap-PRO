@@ -42,8 +42,7 @@ window.onload = () => {
                 loadWallet();
             }
         };
-    }
-    }
+   
 
     // BOTONES DE NAVEGACIÓN
     if(get("playBtn")) get("playBtn").onclick = startGame;
