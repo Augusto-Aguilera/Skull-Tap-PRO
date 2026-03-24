@@ -44,139 +44,73 @@ window.onload = () => {
         };
    
 
-    // BOTONES DE NAVEGACIÓN
+    
+  // --- BOTONES DE NAVEGACIÓN ---
     if(get("playBtn")) get("playBtn").onclick = startGame;
     if(get("restartBtn")) get("restartBtn").onclick = startGame;
     if(get("rankingBtn")) get("rankingBtn").onclick = showRanking;
-  };
+    
+    // Cerramos el window.onload correctamente
+}; 
+
+// --- FUNCIONES DE BASE DE DATOS (ESTAS VAN FUERA DEL ONLOAD) ---
 
 async function loadWallet() {
-    const { data } = await client.from('scores').select('wallet').eq('name', currentUser.email).maybeSingle();
-    if (data) { wallet = data.wallet; updateUI(); }
-
-
-// JUEGO
-get("playBtn").onclick = startGame;
-get("restartBtn").onclick = startGame;
-
-function startGame() {
-    score = 0; time = 15; multiplier = 1;
-    get("gameArea").innerHTML = "";
-    updateUI();
-    switchScreen("game");
-    
-    clearInterval(gameTimer);
-    clearInterval(spawnTimer);
-
-    spawnTimer = setInterval(createTarget, 800);
-    gameTimer = setInterval(() => {
-        time--;
-        get("time").innerText = time;
-        if (time <= 0) endGame();
-    }, 1000);
-}
-
-function createTarget() {
-    const area = get("gameArea");
-    const t = document.createElement("div");
-    t.className = "target";
-    t.innerHTML = "💀";
-    t.style.background = currentSkin;
-    t.style.boxShadow = `0 0 20px ${currentSkin}`;
-    
-    const x = Math.random() * (area.clientWidth - 80);
-    const y = Math.random() * (area.clientHeight - 80);
-    t.style.left = x + "px";
-    t.style.top = y + "px";
-
-    t.onclick = (e) => { e.stopPropagation(); hit(t); };
-    area.appendChild(t);
-    setTimeout(() => { if(t.parentNode) { t.remove(); multiplier = 1; updateUI(); } }, 1000);
-}
-
-function hit(el) {
-    get("hitSound").play().catch(()=>{});
-    get("gameArea").classList.add("shake");
-    setTimeout(() => get("gameArea").classList.remove("shake"), 200);
-    
-    score += (10 * multiplier);
-    multiplier++;
-    el.remove();
-    updateUI();
-}
-
-get("gameArea").onclick = () => { if(get("survivalMode").checked) endGame(); };
-
-function updateUI() {
-    get("score").innerText = score;
-    get("combo").innerText = "x" + multiplier;
-    get("walletAmount").innerText = wallet;
-}
-
-function endGame() {
-    clearInterval(gameTimer); clearInterval(spawnTimer);
-    wallet += score;
-    get("finalScore").innerText = score + " pts";
-    switchScreen("gameOver");
-    if (currentUser) syncSupabase();
-}
-
-async function syncSupabase() {
-    await client.from("scores").insert([{ name: currentUser.email, score: score }]);
-    await client.from("scores").update({ wallet: wallet }).eq('name', currentUser.email);
-}
-
-function switchScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const target = get(id + "Screen");
-    if (target) target.classList.add('active');
-}
-
-function goHome() { switchScreen("start"); }
-
-async function showRanking() {
-    // 1. Buscamos los datos en la tabla 'scores'
-    const { data, error } = await client
-        .from('scores') 
-        .select('*')
-        .order('score', { ascending: false })
-        .limit(10);
-
-    if (error) {
-        console.error("Error al obtener ranking:", error);
-        return;
+    if (!currentUser) return;
+    const { data } = await client
+        .from('scores')
+        .select('wallet')
+        .eq('name', currentUser.email.split('@')[0])
+        .maybeSingle();
+        
+    if (data) { 
+        wallet = data.wallet; 
+        updateUI(); 
     }
+}
 
-    // 2. Dibujamos la lista en el HTML
-    const list = get("rankingList");
-    list.innerHTML = ""; // Limpiamos lo que haya
-
-    if (data.length === 0) {
-        list.innerHTML = "<li>No hay puntajes aún</li>";
-    } else {
-        data.forEach((item, index) => {
-            list.innerHTML += `<li>${index + 1}. ${item.name}: ${item.score} pts</li>`;
-        });
-    }
-
-    async function saveScore() {
-    if (!currentUser) return; // Si no estás logueado, no guarda nada
-
+async function saveScore() {
+    if (!currentUser) return;
     const { error } = await client
         .from('scores')
-        .insert([
+        .upsert([
             { 
                 name: currentUser.email.split('@')[0], 
                 score: score, 
                 wallet: wallet 
             }
-        ]);
+        ], { onConflict: 'name' }); // Actualiza si el nombre ya existe
+
+    if (error) console.error("Error al guardar:", error);
+}
+
+async function showRanking() {
+    const { data, error } = await client
+        .from('scores')
+        .select('*')
+        .order('score', { ascending: false })
+        .limit(10);
 
     if (error) {
-        console.error("Error guardando score:", error);
-    } else {
-        console.log("Puntaje guardado con éxito!");
+        console.error("Error ranking:", error);
+        return;
     }
+
+    const list = get("rankingList");
+    if (list) {
+        list.innerHTML = "";
+        data.forEach((item, index) => {
+            list.innerHTML += `<li>${index + 1}. ${item.name}: ${item.score} pts</li>`;
+        });
+    }
+    
+    // Mostramos la pantalla de ranking
+    if(get("rankingScreen")) get("rankingScreen").classList.add("active");
+}
+
+// --- FUNCIÓN PARA CERRAR EL RANKING (Opcional si tenés un botón de volver) ---
+function closeRanking() {
+    if(get("rankingScreen")) get("rankingScreen").classList.remove("active");
 }
 
     // 3. Mostramos la pantalla de ranking
