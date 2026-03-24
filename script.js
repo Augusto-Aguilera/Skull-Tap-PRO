@@ -25,6 +25,8 @@ window.onload = () => {
                 if (signUpError) {
                     alert("Error al registrar: " + signUpError.message);
                     return;
+
+                    if(get("rankingBtn")) get("rankingBtn").onclick = showRanking;
                 }
                 alert("¡Cuenta creada! Ya puedes jugar.");
                 data = signUpData;
@@ -131,3 +133,32 @@ function switchScreen(id) {
 }
 
 function goHome() { switchScreen("start"); }
+
+async function showRanking() {
+    // 1. Buscamos los datos en la tabla 'scores'
+    const { data, error } = await client
+        .from('scores') 
+        .select('*')
+        .order('score', { ascending: false })
+        .limit(10);
+
+    if (error) {
+        console.error("Error al obtener ranking:", error);
+        return;
+    }
+
+    // 2. Dibujamos la lista en el HTML
+    const list = get("rankingList");
+    list.innerHTML = ""; // Limpiamos lo que haya
+
+    if (data.length === 0) {
+        list.innerHTML = "<li>No hay puntajes aún</li>";
+    } else {
+        data.forEach((item, index) => {
+            list.innerHTML += `<li>${index + 1}. ${item.name}: ${item.score} pts</li>`;
+        });
+    }
+
+    // 3. Mostramos la pantalla de ranking
+    get("rankingScreen").classList.add("active");
+}
