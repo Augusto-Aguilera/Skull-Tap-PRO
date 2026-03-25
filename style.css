@@ -87,6 +87,17 @@ input:checked + .slider:before { transform: translateX(24px); }
     letter-spacing: 1px;
     pointer-events: none; /* Para que no interfiera si alguien hace clic cerca */
 }
+.target {
+    position: absolute;
+    cursor: pointer;
+    font-size: 50px;
+    transition: transform 0.1s;
+    user-select: none;
+    z-index: 10;
+}
+.target:active {
+    transform: scale(0.8);
+}
 
 /* Brillo sutil para el símbolo de marca */
 .footer-copy b {
