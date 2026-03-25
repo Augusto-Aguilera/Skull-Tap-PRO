@@ -72,11 +72,9 @@
     <div class="shop-grid">
         <button onclick="buySkin('var(--neon-magenta)', 0)">MAGENTA</button>
         <button onclick="buySkin('#00fbff', 500)">CYAN</button>
-        <button onclick="buySkin('#ffcc00', 1000)">ORO</button>
-
-        <!-- NUEVAS SKINS -->
+        <button onclick="buySkin('#ffcc00', 1000)">LEVIATAN</button>
         <button onclick="buySkin('#ff5500', 2000)">INFERNO</button>
-        <button onclick="buySkin('#00aaff', 3500)">DIABLO</button>
+        <button onclick="buySkin('#00aaff', 3500)">LUCIFER</button>
         <button onclick="buySkin('#6a00ff', 5000)">MOLOCH</button>
         <button onclick="buySkin('#ffd700', 8000)">BAPHOMET</button>
         <button onclick="buySkin('rainbow', 12000)">ORULA</button>
@@ -88,7 +86,9 @@
 <div id="rankingScreen" class="screen">
     <h2>🏆 TOP 10</h2>
     <ul id="rankingList"></ul>
-    <button onclick="goHome()" class="btn-outline">VOLVER</button>
+    <button onclick="switchScreen('start')" class="btn-outline">VOLVER</button>
+
+<button onclick="switchScreen('start')" class="btn-outline">VOLVER</button>
 </div>
 
 <audio id="hitSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
