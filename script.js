@@ -163,3 +163,61 @@ window.addEventListener("load", () => {
     applyPricesToShop();
     updateShopUI();
 });
+/* =========================
+   🔐 LOGIN SUPABASE FIX
+========================= */
+
+const client = window.supabase.createClient(
+    "https://thkuxitmdfwthyadcytx.supabase.co",
+    "sb_publishable_ifOy7_StfYvwy287J88FSA_l-LseoVd"
+);
+
+let currentUser = null;
+
+window.addEventListener("load", () => {
+
+    const loginBtn = get("loginBtn");
+    const registerBtn = get("registerBtn");
+
+    if(loginBtn){
+        loginBtn.onclick = async () => {
+
+            const email = get("email").value;
+            const password = get("password").value;
+
+            const { data, error } = await client.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if(error){
+                alert("Error: " + error.message);
+                return;
+            }
+
+            currentUser = data.user;
+            get("userStatus").innerText =
+                "Conectado como: " + email.split("@")[0];
+        };
+    }
+
+    if(registerBtn){
+        registerBtn.onclick = async () => {
+
+            const email = get("email").value;
+            const password = get("password").value;
+
+            const { error } = await client.auth.signUp({
+                email,
+                password
+            });
+
+            if(error){
+                alert("Error: " + error.message);
+            } else {
+                alert("Cuenta creada 💀");
+            }
+        };
+    }
+
+});
