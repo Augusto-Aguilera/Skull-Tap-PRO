@@ -1,40 +1,4 @@
-:root {
-    --neon-cyan: #00fbff;
-    --neon-magenta: #ff00ff;
-    --neon-green: #00ffcc;
-}
-
-body {
-    margin: 0;
-    font-family: Arial;
-    background: black;
-    color: white;
-    text-align: center;
-}
-
-.screen { display: none; }
-.screen.active { display: block; }
-
-#gameArea {
-    width: 300px;
-    height: 300px;
-    border: 2px solid cyan;
-    margin: auto;
-    position: relative;
-
-    background:
-    linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
-    url('img/moloch.jpg');
-    background-size: cover;
-}
-
-.target {
-    position: absolute;
-    font-size: 40px;
-    cursor: pointer;
-}
-
-/* 💥 */
+/* 💥 EXPLOSIÓN */
 .explosion {
     position: absolute;
     width: 20px;
@@ -44,10 +8,13 @@ body {
 }
 
 @keyframes explode {
-    to { transform: scale(5); opacity: 0; }
+    to {
+        transform: scale(5);
+        opacity: 0;
+    }
 }
 
-/* 🌈 */
+/* 🌈 GLITCH */
 @keyframes rainbowGlow {
     0% { filter: drop-shadow(0 0 10px red); }
     25% { filter: drop-shadow(0 0 10px yellow); }
