@@ -2,29 +2,72 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Skull Tap PRO</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💀</text></svg>">
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<div class="screen active" id="startScreen">
-    <h1>💀 SKULL TAP PRO</h1>
+<div class="bg-overlay"></div>
 
-    <button id="playBtn">JUGAR</button>
-    <button onclick="switchScreen('shopScreen')">TIENDA</button>
-    <button onclick="switchScreen('rankingScreen')">RANKING</button>
+<div id="startScreen" class="screen active">
+
+    <footer class="footer-copy">
+        &copy; 2026 Skull Tap PRO <br> Patric Aguilera &reg;
+    </footer>
+
+    <h1 class="logo">💀 SKULL TAP PRO</h1>
+
+    <div class="mode-selector">
+        <label class="switch">
+            <input type="checkbox" id="survivalMode">
+            <span class="slider round"></span>
+        </label>
+        <span class="mode-text">MODO SUPERVIVENCIA</span>
+    </div>
+
+    <div class="auth-container">
+        <div class="input-group">
+            <input id="email" type="email" placeholder="Email">
+            <input id="password" type="password" placeholder="Contraseña">
+        </div>
+        <div class="btn-group">
+            <button id="loginBtn">Entrar</button>
+            <button id="registerBtn" class="btn-outline">Unirse</button>
+        </div>
+        <p id="userStatus">Inicia sesión para guardar puntos</p>
+    </div>
+
+    <div class="menu-main">
+        <button id="playBtn" class="btn-giant">JUGAR AHORA</button>
+        <div class="menu-row">
+            <button onclick="switchScreen('shop')">🛒 Tienda</button>
+            <button id="rankingBtn">🏆 Ranking</button>
+        </div>
+    </div>
 </div>
 
-<div class="screen" id="gameScreen">
+<div id="gameScreen" class="screen">
+    <div class="status-bar">
+        <span>PTS: <b id="score">0</b></span>
+        <span>TIEMPO: <b id="time">15</b></span>
+        <span>🔥 <b id="combo">x1</b></span>
+    </div>
     <div id="gameArea"></div>
-    <p>Puntos: <span id="score">0</span></p>
 </div>
 
-<div class="screen" id="shopScreen">
-    <h2>TIENDA</h2>
-    <p>💰 <span id="walletAmount">0</span></p>
+<div id="gameOverScreen" class="screen">
+    <h2 class="neon-text-mag">FIN DEL TIEMPO</h2>
+    <h3 id="finalScore">0 pts</h3>
+    <button id="restartBtn" class="btn-giant">REINTENTAR</button>
+    <button onclick="goHome()" class="btn-outline">INICIO</button>
+</div>
+
+<div id="shopScreen" class="screen">
+    <h2>🛒 TIENDA</h2>
+    <p>Billetera: <span id="walletAmount">0</span> pts</p>
 
     <div class="shop-grid">
         <button onclick="buySkin('var(--neon-magenta)', 0)">MAGENTA</button>
@@ -39,18 +82,21 @@
         <button onclick="buySkin('rainbow', 12000)">ORULA</button>
     </div>
 
-    <button onclick="goHome()">VOLVER</button>
+    <button onclick="goHome()" class="btn-outline">VOLVER</button>
 </div>
 
-<div class="screen" id="rankingScreen">
-    <h2>RANKING</h2>
+<div id="rankingScreen" class="screen">
+    <h2>🏆 TOP 10</h2>
     <ul id="rankingList"></ul>
-    <button onclick="goHome()">VOLVER</button>
+    <button onclick="goHome()" class="btn-outline">VOLVER</button>
 </div>
 
 <audio id="hitSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+
+<!-- NUEVO -->
 <audio id="buySound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
 
 <script src="script.js"></script>
+
 </body>
 </html>
