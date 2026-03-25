@@ -6,13 +6,17 @@
 <title>Skull Tap PRO</title>
 
 <link rel="stylesheet" href="style.css">
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
 <div id="startScreen" class="screen active">
 <h1 class="logo">💀 SKULL TAP PRO</h1>
+
+<label>
+<input type="checkbox" id="survivalMode"> MODO SUPERVIVENCIA
+</label>
+
 <button id="playBtn" class="btn-giant">JUGAR</button>
 </div>
 
@@ -31,6 +35,10 @@
 <h3 id="finalScore"></h3>
 <button id="restartBtn">REINTENTAR</button>
 </div>
+
+<!-- 🔊 sonidos -->
+<audio id="hit1" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+<audio id="hit2" src="https://assets.mixkit.co/active_storage/sfx/2588/2588-preview.mp3"></audio>
 
 <script src="script.js"></script>
 
