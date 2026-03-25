@@ -42,18 +42,14 @@ window.onload = () => {
                 loadWallet();
             }
         };
-   
-
-    
-  // --- BOTONES DE NAVEGACIÓN ---
+   // --- BOTONES DE NAVEGACIÓN ---
     if(get("playBtn")) get("playBtn").onclick = startGame;
     if(get("restartBtn")) get("restartBtn").onclick = startGame;
     if(get("rankingBtn")) get("rankingBtn").onclick = showRanking;
     
-    // Cerramos el window.onload correctamente
-}; 
+}; // <--- ESTA LLAVE CIERRA EL WINDOW.ONLOAD
 
-// --- FUNCIONES DE BASE DE DATOS (ESTAS VAN FUERA DEL ONLOAD) ---
+// --- FUNCIONES DE SUPABASE (FUERA DEL ONLOAD) ---
 
 async function loadWallet() {
     if (!currentUser) return;
@@ -65,12 +61,12 @@ async function loadWallet() {
         
     if (data) { 
         wallet = data.wallet; 
-        updateUI(); 
+        if (typeof updateUI === "function") updateUI(); 
     }
 }
 
 async function saveScore() {
-    if (!currentUser) return;
+    if (!currentUser || score === 0) return;
     const { error } = await client
         .from('scores')
         .upsert([
@@ -79,7 +75,7 @@ async function saveScore() {
                 score: score, 
                 wallet: wallet 
             }
-        ], { onConflict: 'name' }); // Actualiza si el nombre ya existe
+        ], { onConflict: 'name' });
 
     if (error) console.error("Error al guardar:", error);
 }
@@ -99,20 +95,15 @@ async function showRanking() {
     const list = get("rankingList");
     if (list) {
         list.innerHTML = "";
-        data.forEach((item, index) => {
-            list.innerHTML += `<li>${index + 1}. ${item.name}: ${item.score} pts</li>`;
-        });
+        if (data.length === 0) {
+            list.innerHTML = "<li>No hay puntajes aún</li>";
+        } else {
+            data.forEach((item, index) => {
+                list.innerHTML += `<li>${index + 1}. ${item.name}: ${item.score} pts</li>`;
+            });
+        }
     }
     
-    // Mostramos la pantalla de ranking
+    // Mostramos la pantalla (asegurate de tener este ID en tu HTML/CSS)
     if(get("rankingScreen")) get("rankingScreen").classList.add("active");
-}
-
-// --- FUNCIÓN PARA CERRAR EL RANKING (Opcional si tenés un botón de volver) ---
-function closeRanking() {
-    if(get("rankingScreen")) get("rankingScreen").classList.remove("active");
-}
-
-    // 3. Mostramos la pantalla de ranking
-    get("rankingScreen").classList.add("active");
 }
