@@ -10,7 +10,7 @@ let currentSkin = "var(--neon-magenta)";
 let ownedSkins = ["var(--neon-magenta)"];
 let gameTimer, spawnTimer;
 
-// --- 1. NOMBRES EN TIENDA ---
+// --- NOMBRES EN TIENDA ---
 function updateShopUI() {
     const buttons = document.querySelectorAll(".shop-grid button");
     buttons.forEach(btn => {
@@ -42,7 +42,7 @@ function updateShopUI() {
     });
 }
 
-// --- 2. RANKING ---
+// --- RANKING ---
 async function showRanking() {
     const { data, error } = await client
         .from('scores')
