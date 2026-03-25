@@ -96,6 +96,13 @@
 <!-- NUEVO -->
 <audio id="buySound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
 
+<script>
+function switchScreen(screen){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screen + "Screen").classList.add("active");
+}
+</script>
+
 <script src="script.js"></script>
 
 </body>
