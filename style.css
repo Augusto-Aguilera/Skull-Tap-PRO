@@ -1,75 +1,42 @@
-body{
-margin:0;
-background:black;
-color:white;
-font-family:Arial;
-overflow:hidden;
-}
-
-.screen{display:none;height:100vh;justify-content:center;align-items:center;flex-direction:column;}
-.screen.active{display:flex;}
-
-.logo{font-size:3rem;color:#0ff;text-shadow:0 0 20px #0ff;}
-
+/* 🔥 FONDO MOLOCH SOLO EN GAME AREA */
 #gameArea{
-width:90vw;
-height:60vh;
-border:3px solid cyan;
-position:relative;
-overflow:hidden;
-
 background:
-linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.9)),
+linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)),
 url("https://images.unsplash.com/photo-1608889175512-5c1d6c2a4f3e");
-background-size:cover;
+background-size: cover;
+background-position: center;
 }
 
-/* CALAVERAS */
-.target{
-position:absolute;
-font-size:50px;
-cursor:pointer;
-}
-
-/* BOSS */
-.boss{
-font-size:90px;
-}
-
-/* EXPLOSION */
+/* 💥 EXPLOSION */
 .explosion{
 position:absolute;
 width:20px;
 height:20px;
 border-radius:50%;
-animation:explode .4s forwards;
+animation:explode 0.4s forwards;
+pointer-events:none;
 }
 
 @keyframes explode{
-to{transform:scale(6);opacity:0;}
+to{
+transform:scale(5);
+opacity:0;
+}
 }
 
-/* PARTICULAS */
+/* ✨ PARTICULAS */
 .particle{
 position:absolute;
-width:4px;
-height:4px;
+width:5px;
+height:5px;
 border-radius:50%;
-animation:particle .6s linear forwards;
+animation:particle 0.6s linear forwards;
+pointer-events:none;
 }
 
 @keyframes particle{
-to{transform:translate(var(--x),var(--y));opacity:0;}
+to{
+transform:translate(var(--x), var(--y));
+opacity:0;
 }
-
-/* SHAKE */
-.shake{
-animation:shake .2s;
-}
-
-@keyframes shake{
-0%{transform:translate(0)}
-25%{transform:translate(5px,-5px)}
-50%{transform:translate(-5px,5px)}
-100%{transform:translate(0)}
 }
