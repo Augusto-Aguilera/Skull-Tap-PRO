@@ -39,7 +39,7 @@ body, html {
 
 .screen.active { display: flex; }
 
-/* --- TITULOS Y TEXTOS --- */
+/* --- TITULOS --- */
 .logo { 
     font-size: 3rem; 
     text-shadow: 0 0 20px var(--neon-cyan); 
@@ -110,15 +110,16 @@ button:hover {
     overflow: hidden;
     box-shadow: 0 0 20px var(--neon-cyan);
 
-    /* 🔥 FONDO MOLOCH */
-    background: 
-        linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)),
-        url("img/moloch.jpg");
+    /* 💀 FONDO MOLOCH */
+    background:
+    linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.9)),
+    url('img/moloch.jpg');
+
     background-size: cover;
-    background-position: center;
+    background-position: 50% 20%;
 }
 
-/* --- TARGET UNIFICADO --- */
+/* --- TARGET --- */
 .target {
     width: 70px; 
     height: 70px; 
@@ -193,9 +194,18 @@ input:checked + .slider:before {
     transform: translateX(24px); 
 }
 
-/* --- EFECTOS --- */
+/* 💰 PRECIOS EN TIENDA (SIN TOCAR HTML) */
+.shop-grid button:nth-child(1)::after {
+    content: " (FREE)";
+}
+.shop-grid button:nth-child(2)::after {
+    content: " (500)";
+}
+.shop-grid button:nth-child(3)::after {
+    content: " (1000)";
+}
 
-/* 💥 EXPLOSION */
+/* ✨ EFECTOS */
 .explosion {
     position: absolute;
     width: 20px;
@@ -212,7 +222,6 @@ input:checked + .slider:before {
     }
 }
 
-/* ✨ PARTICULAS */
 .particle {
     position: absolute;
     width: 5px;
