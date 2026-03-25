@@ -4,247 +4,54 @@
     --neon-green: #00ffcc;
 }
 
-body, html {
-    margin: 0; 
-    padding: 0; 
-    width: 100%; 
-    height: 100%;
-    font-family: 'Arial', sans-serif; 
-    color: white; 
-    overflow: hidden;
+body {
+    margin: 0;
+    font-family: Arial;
+    background: black;
+    color: white;
+    text-align: center;
 }
 
-.bg-overlay {
-    position: fixed; 
-    width: 100%; 
-    height: 100%; 
-    z-index: -1;
-    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), 
-                url('img/fondoo.jpg');
-    background-size: cover; 
-    background-position: center;
-}
+.screen { display: none; }
+.screen.active { display: block; }
 
-.screen {
-    display: none; 
-    width: 100%; 
-    height: 100%;
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center;
-    text-align: center; 
-    box-sizing: border-box; 
-    padding: 20px;
-}
-
-.screen.active { display: flex; }
-
-/* --- TITULOS --- */
-.logo { 
-    font-size: 3rem; 
-    text-shadow: 0 0 20px var(--neon-cyan); 
-    margin-bottom: 20px; 
-}
-
-.auth-container { 
-    background: rgba(0,0,0,0.6); 
-    padding: 20px; 
-    border-radius: 15px; 
-    margin-bottom: 20px; 
-    width: 100%; 
-    max-width: 320px; 
-}
-
-.input-group input { 
-    width: 90%; 
-    padding: 12px; 
-    margin: 5px 0; 
-    border-radius: 8px; 
-    border: none; 
-    background: #222; 
-    color: white; 
-}
-
-/* --- BOTONES --- */
-button {
-    cursor: pointer; 
-    border: 2px solid var(--neon-green); 
-    background: none;
-    color: var(--neon-green); 
-    padding: 15px 25px; 
-    border-radius: 30px;
-    font-weight: bold; 
-    font-size: 1rem; 
-    transition: 0.3s; 
-    margin: 10px;
-}
-
-button:hover { 
-    background: var(--neon-green); 
-    color: black; 
-    box-shadow: 0 0 20px var(--neon-green); 
-}
-
-.btn-giant {
-    width: 280px; 
-    font-size: 1.4rem; 
-    padding: 20px;
-    background: var(--neon-green); 
-    color: black; 
-    box-shadow: 0 0 15px var(--neon-green);
-}
-
-.btn-outline { 
-    border-color: white; 
-    color: white; 
-}
-
-/* --- AREA DE JUEGO --- */
 #gameArea {
-    width: 90vw; 
-    max-width: 400px; 
-    height: 50vh;
-    border: 3px solid var(--neon-cyan); 
-    border-radius: 20px;
-    position: relative; 
-    overflow: hidden;
-    box-shadow: 0 0 20px var(--neon-cyan);
+    width: 300px;
+    height: 300px;
+    border: 2px solid cyan;
+    margin: auto;
+    position: relative;
 
-    /* 💀 FONDO MOLOCH */
     background:
-    linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.9)),
+    linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
     url('img/moloch.jpg');
-
     background-size: cover;
-    background-position: 50% 20%;
 }
 
-/* --- TARGET --- */
 .target {
-    width: 70px; 
-    height: 70px; 
-    font-size: 50px; 
     position: absolute;
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-    border-radius: 50%; 
-    cursor: pointer; 
-    user-select: none;
-    transition: transform 0.1s;
-    z-index: 10;
+    font-size: 40px;
+    cursor: pointer;
 }
 
-.target:active {
-    transform: scale(0.8);
-}
-
-.status-bar { 
-    font-size: 1.2rem; 
-    margin-bottom: 15px; 
-    display: flex; 
-    gap: 20px; 
-}
-
-/* --- SWITCH --- */
-.mode-selector { 
-    margin-bottom: 20px; 
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
-}
-
-.switch { 
-    position: relative; 
-    width: 50px; 
-    height: 26px; 
-}
-
-.switch input { 
-    opacity: 0; 
-    width: 0; 
-    height: 0; 
-}
-
-.slider { 
-    position: absolute; 
-    inset: 0; 
-    background: #444; 
-    border-radius: 30px; 
-    transition: 0.4s; 
-}
-
-.slider:before { 
-    content: ""; 
-    position: absolute; 
-    height: 18px; 
-    width: 18px; 
-    left: 4px; 
-    bottom: 4px; 
-    background: white; 
-    border-radius: 50%; 
-    transition: 0.4s; 
-}
-
-input:checked + .slider { 
-    background: var(--neon-magenta); 
-}
-
-input:checked + .slider:before { 
-    transform: translateX(24px); 
-}
-
-/* 💰 MEJORA VISUAL DE PRECIOS */
-.shop-grid button {
-    letter-spacing: 1px;
-    font-size: 0.95rem;
-    text-shadow: 0 0 5px rgba(0,255,200,0.3);
-}
-
-/* ✨ EFECTOS */
+/* 💥 */
 .explosion {
     position: absolute;
     width: 20px;
     height: 20px;
     border-radius: 50%;
     animation: explode 0.4s forwards;
-    pointer-events: none;
 }
 
 @keyframes explode {
-    to {
-        transform: scale(5);
-        opacity: 0;
-    }
+    to { transform: scale(5); opacity: 0; }
 }
 
-.particle {
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    animation: particle 0.6s linear forwards;
-    pointer-events: none;
-}
-
-@keyframes particle {
-    to {
-        transform: translate(var(--x), var(--y));
-        opacity: 0;
-    }
-}
-
-/* --- FOOTER --- */
-.footer-copy {
-    position: absolute;
-    bottom: 20px;
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.4);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    pointer-events: none;
-}
-
-.footer-copy b {
-    color: var(--neon-cyan);
+/* 🌈 */
+@keyframes rainbowGlow {
+    0% { filter: drop-shadow(0 0 10px red); }
+    25% { filter: drop-shadow(0 0 10px yellow); }
+    50% { filter: drop-shadow(0 0 10px lime); }
+    75% { filter: drop-shadow(0 0 10px cyan); }
+    100% { filter: drop-shadow(0 0 10px magenta); }
 }
