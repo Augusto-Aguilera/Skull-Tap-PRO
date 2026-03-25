@@ -1,149 +1,109 @@
-const client = window.supabase.createClient(
-    "https://thkuxitmdfwthyadcytx.supabase.co",
-    "sb_publishable_ifOy7_StfYvwy287J88FSA_l-LseoVd"
-);
+const get=id=>document.getElementById(id);
 
-const get = (id) => document.getElementById(id);
+let score=0,time=15;
+let combo=1;
+let comboTimer;
 
-let currentUser = null;
-let score = 0, time = 15, wallet = 0, multiplier = 1;
-let currentSkin = "var(--neon-magenta)";
-let gameTimer, spawnTimer;
+let gameTimer,spawnTimer;
 
-window.onload = () => {
-
-    if(get("loginBtn")) {
-        get("loginBtn").onclick = async () => {
-            const email = get("email").value;
-            const password = get("password").value;
-
-            let { data, error } = await client.auth.signInWithPassword({ email, password });
-
-            if (error) {
-                const { data: signUpData } = await client.auth.signUp({ email, password });
-                alert("Cuenta creada automáticamente 👍");
-                data = signUpData;
-            }
-
-            if (data.user) {
-                currentUser = data.user;
-                get("userStatus").innerText = "Conectado como: " + email.split('@')[0];
-                loadWallet();
-            }
-        };
-    }
-
-    if(get("playBtn")) get("playBtn").onclick = startGame;
-    if(get("restartBtn")) get("restartBtn").onclick = startGame;
-    if(get("rankingBtn")) get("rankingBtn").onclick = showRanking;
+window.onload=()=>{
+get("playBtn").onclick=startGame;
+get("restartBtn").onclick=startGame;
 };
 
-function goHome() {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    get("startScreen").classList.add("active");
+function switchScreen(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+get(id+"Screen").classList.add("active");
 }
 
-async function loadWallet() {
-    if (!currentUser) return;
+function startGame(){
+score=0;
+time=15;
+combo=1;
 
-    const { data } = await client
-        .from('scores')
-        .select('wallet')
-        .eq('name', currentUser.email.split('@')[0])
-        .maybeSingle();
+switchScreen("game");
+updateUI();
 
-    if (data) {
-        wallet = data.wallet;
-        updateUI();
-    }
+gameTimer=setInterval(()=>{
+time--;
+updateUI();
+if(time<=0)endGame();
+},1000);
+
+spawnTimer=setInterval(spawnSkull,700);
 }
 
-async function saveScore() {
-    if (!currentUser || score === 0) return;
+function spawnSkull(){
+const skull=document.createElement("div");
+skull.className="target";
+skull.innerHTML="💀";
 
-    await client.from('scores').upsert([{
-        name: currentUser.email.split('@')[0],
-        score: score,
-        wallet: wallet
-    }], { onConflict: 'name' });
+/* 🌈 COLOR NEON RANDOM */
+const colors=["#00fff7","#ff00ff","#00ff00","#ffcc00"];
+const color=colors[Math.floor(Math.random()*colors.length)];
+skull.style.textShadow=`0 0 10px ${color},0 0 20px ${color}`;
+
+skull.style.left=Math.random()*90+"%";
+skull.style.top=Math.random()*90+"%";
+
+skull.onclick=(e)=>{
+hitEffect(e.clientX,e.clientY,color);
+
+score+=10*combo;
+
+/* 🔥 COMBO REAL */
+combo++;
+clearTimeout(comboTimer);
+comboTimer=setTimeout(()=>combo=1,1500);
+
+updateUI();
+skull.remove();
+};
+
+get("gameArea").appendChild(skull);
+
+setTimeout(()=>skull.remove(),1200);
 }
 
-async function showRanking() {
-    const { data } = await client
-        .from('scores')
-        .select('*')
-        .order('score', { ascending: false })
-        .limit(10);
+/* 💥 EFECTO EXPLOSION + PARTICULAS */
+function hitEffect(x,y,color){
 
-    const list = get("rankingList");
+const explosion=document.createElement("div");
+explosion.className="explosion";
+explosion.style.left=x+"px";
+explosion.style.top=y+"px";
+explosion.style.background=color;
 
-    list.innerHTML = data.length === 0
-        ? "<li>No hay puntajes aún</li>"
-        : data.map((item, i) => `<li>${i+1}. ${item.name}: ${item.score}</li>`).join("");
+document.body.appendChild(explosion);
 
-    switchScreen("ranking");
+setTimeout(()=>explosion.remove(),400);
+
+/* partículas */
+for(let i=0;i<8;i++){
+const p=document.createElement("div");
+p.className="particle";
+p.style.left=x+"px";
+p.style.top=y+"px";
+p.style.background=color;
+
+p.style.setProperty("--x",(Math.random()*100-50)+"px");
+p.style.setProperty("--y",(Math.random()*100-50)+"px");
+
+document.body.appendChild(p);
+setTimeout(()=>p.remove(),600);
+}
 }
 
-function updateUI() {
-    if(get("score")) get("score").innerText = score;
-    if(get("time")) get("time").innerText = time;
-    if(get("walletAmount")) get("walletAmount").innerText = wallet;
+function updateUI(){
+get("score").innerText=score;
+get("time").innerText=time;
+get("combo").innerText="x"+combo;
 }
 
-function startGame() {
-    score = 0;
-    time = 15;
+function endGame(){
+clearInterval(gameTimer);
+clearInterval(spawnTimer);
 
-    switchScreen("game");
-
-    updateUI();
-
-    gameTimer = setInterval(() => {
-        time--;
-        updateUI();
-        if (time <= 0) endGame();
-    }, 1000);
-
-    spawnTimer = setInterval(spawnSkull, 800);
-}
-
-function spawnSkull() {
-    const skull = document.createElement("div");
-
-    skull.className = "target";
-    skull.innerHTML = "💀";
-
-    skull.style.left = Math.random() * 80 + 5 + "%";
-    skull.style.top = Math.random() * 80 + 5 + "%";
-
-    skull.onclick = () => {
-        score += 10;
-        wallet += 1;
-
-        updateUI();
-
-        const sound = get("hitSound");
-        if(sound){
-            sound.currentTime = 0;
-            sound.play();
-        }
-
-        skull.remove();
-    };
-
-    get("gameArea").appendChild(skull);
-
-    setTimeout(() => skull.remove(), 1200);
-}
-
-function endGame() {
-    clearInterval(gameTimer);
-    clearInterval(spawnTimer);
-
-    get("gameArea").innerHTML = "";
-    get("finalScore").innerText = score + " pts";
-
-    switchScreen("gameOver");
-
-    saveScore();
+get("finalScore").innerText=score+" pts";
+switchScreen("gameOver");
 }
