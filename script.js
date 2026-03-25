@@ -20,7 +20,7 @@ window.onload = () => {
             if (error && (error.message.includes("Invalid login credentials") || error.status === 400)) {
                 const { data: signUpData, error: signUpError } = await client.auth.signUp({ email, password });
                 if (signUpError) {
-                    alert("Error al registrar: " + signUpError.message);
+                    alert("Error: " + signUpError.message);
                     return;
                 }
                 alert("¡Cuenta creada! Ya puedes jugar.");
@@ -42,19 +42,18 @@ window.onload = () => {
     if(get("playBtn")) get("playBtn").onclick = startGame;
     if(get("restartBtn")) get("restartBtn").onclick = startGame;
     if(get("rankingBtn")) get("rankingBtn").onclick = showRanking;
-    if(get("closeRanking")) get("closeRanking").onclick = () => get("rankingScreen").classList.remove("active");
 }; 
 
-// --- FUNCIONES DE SUPABASE ---
+// --- FUNCIONES DE NAVEGACIÓN ---
+function goHome() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    get("startScreen").classList.add("active");
+}
 
+// --- FUNCIONES DE SUPABASE ---
 async function loadWallet() {
     if (!currentUser) return;
-    const { data } = await client
-        .from('scores')
-        .select('wallet')
-        .eq('name', currentUser.email.split('@')[0])
-        .maybeSingle();
-        
+    const { data } = await client.from('scores').select('wallet').eq('name', currentUser.email.split('@')[0]).maybeSingle();
     if (data) { 
         wallet = data.wallet; 
         updateUI(); 
@@ -63,24 +62,15 @@ async function loadWallet() {
 
 async function saveScore() {
     if (!currentUser || score === 0) return;
-    const { error } = await client
-        .from('scores')
-        .upsert([{ 
-            name: currentUser.email.split('@')[0], 
-            score: score, 
-            wallet: wallet 
-        }], { onConflict: 'name' });
-
-    if (error) console.error("Error al guardar:", error);
+    await client.from('scores').upsert([{ 
+        name: currentUser.email.split('@')[0], 
+        score: score, 
+        wallet: wallet 
+    }], { onConflict: 'name' });
 }
 
 async function showRanking() {
-    const { data, error } = await client
-        .from('scores')
-        .select('*')
-        .order('score', { ascending: false })
-        .limit(10);
-
+    const { data, error } = await client.from('scores').select('*').order('score', { ascending: false }).limit(10);
     if (error) return;
 
     const list = get("rankingList");
@@ -88,28 +78,30 @@ async function showRanking() {
         list.innerHTML = data.length === 0 ? "<li>No hay puntajes aún</li>" : 
             data.map((item, i) => `<li>${i + 1}. ${item.name}: ${item.score} pts</li>`).join("");
     }
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     get("rankingScreen").classList.add("active");
 }
 
-// --- LÓGICA DEL JUEGO (RESTAURADA) ---
-
+// --- LÓGICA DEL JUEGO ---
 function updateUI() {
-    get("scoreDisplay").innerText = score;
-    get("timeDisplay").innerText = time;
-    get("walletDisplay").innerText = wallet;
+    if(get("score")) get("score").innerText = score;
+    if(get("time")) get("time").innerText = time;
+    if(get("walletAmount")) get("walletAmount").innerText = wallet;
 }
 
 function startGame() {
     score = 0;
     time = 15;
-    get("menuScreen").style.display = "none";
-    get("gameScreen").style.display = "block";
-    get("gameOverScreen").classList.remove("active");
+    
+    // Cambiar pantallas usando clases (como dicta tu CSS)
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    get("gameScreen").classList.add("active");
+    
     updateUI();
 
     gameTimer = setInterval(() => {
         time--;
-        get("timeDisplay").innerText = time;
+        updateUI();
         if (time <= 0) endGame();
     }, 1000);
 
@@ -118,27 +110,36 @@ function startGame() {
 
 function spawnSkull() {
     const skull = document.createElement("div");
-    skull.className = "skull";
-    skull.style.left = Math.random() * 80 + 10 + "%";
-    skull.style.top = Math.random() * 80 + 10 + "%";
-    skull.style.backgroundColor = currentSkin;
+    // Usamos la clase 'target' que ya tienes en tu CSS para que se vea bien
+    skull.className = "target"; 
+    skull.innerHTML = "💀";
+    skull.style.left = Math.random() * 80 + 5 + "%";
+    skull.style.top = Math.random() * 80 + 5 + "%";
+    
+    // Si tienes un color de skin guardado, lo aplicamos
+    skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
 
     skull.onclick = () => {
         score += 10 * multiplier;
         wallet += 1;
         updateUI();
+        if(get("hitSound")) get("hitSound").currentTime = 0;
+        if(get("hitSound")) get("hitSound").play();
         skull.remove();
     };
 
-    get("gameScreen").appendChild(skull);
-    setTimeout(() => skull.remove(), 1500);
+    get("gameArea").appendChild(skull);
+    setTimeout(() => { if(skull) skull.remove(); }, 1200);
 }
 
 function endGame() {
     clearInterval(gameTimer);
     clearInterval(spawnTimer);
-    document.querySelectorAll(".skull").forEach(s => s.remove());
-    get("finalScore").innerText = score;
+    get("gameArea").innerHTML = ""; // Limpiar calaveras sobrantes
+    get("finalScore").innerText = score + " pts";
+    
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     get("gameOverScreen").classList.add("active");
-    saveScore(); // Guardamos en Supabase al terminar
+    
+    saveScore();
 }
