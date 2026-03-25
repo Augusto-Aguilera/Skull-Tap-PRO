@@ -117,6 +117,7 @@ function startGame() {
     score = 0;
     time = 15;
     combo = 1;
+    updateShopUI();
 
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     get("gameScreen").classList.add("active");
@@ -213,4 +214,60 @@ function endGame() {
     get("gameOverScreen").classList.add("active");
 
     saveScore();
+}
+/* 🔥 SISTEMA DE SKINS PRO (SIN TOCAR BASE) */
+
+let ownedSkins = ["var(--neon-magenta)"]; // ya tienes la default
+
+function buySkin(color, price){
+
+    // Si ya la tiene → equipar
+    if(ownedSkins.includes(color)){
+        currentSkin = color;
+        updateShopUI();
+        return;
+    }
+
+    // Si no alcanza el dinero
+    if(wallet < price){
+        alert("No tienes suficientes puntos 💀");
+        return;
+    }
+
+    // Comprar
+    wallet -= price;
+    ownedSkins.push(color);
+    currentSkin = color;
+
+    updateUI();
+    updateShopUI();
+}
+
+/* 🎨 ACTUALIZA BOTONES DE TIENDA */
+function updateShopUI(){
+
+    const buttons = document.querySelectorAll(".shop-grid button");
+
+    buttons.forEach(btn => {
+
+        // Detectamos color desde el onclick
+        const onclick = btn.getAttribute("onclick");
+
+        if(!onclick) return;
+
+        const match = onclick.match(/'(.*?)'/);
+        if(!match) return;
+
+        const color = match[1];
+
+        if(currentSkin === color){
+            btn.innerText = "EQUIPADO";
+            btn.style.background = color;
+            btn.style.color = "black";
+        }
+        else if(ownedSkins.includes(color)){
+            btn.innerText = "USAR";
+            btn.style.background = "none";
+        }
+    });
 }
