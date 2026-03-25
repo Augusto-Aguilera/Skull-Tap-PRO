@@ -1,38 +1,113 @@
-const get = id => document.getElementById(id);
+/* =========================
+   💀 EXPANSIÓN FINAL
+========================= */
 
-let score = 0;
-let wallet = 0;
-let currentSkin = "var(--neon-magenta)";
-let ownedSkins = ["var(--neon-magenta)"];
-
-function switchScreen(id){
-    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    get(id).classList.add("active");
+if(typeof ownedSkins === "undefined"){
+    var ownedSkins = ["var(--neon-magenta)"];
 }
 
-function goHome(){
-    switchScreen("startScreen");
+/* 💰 precios */
+function applyPricesToShop(){
+    const buttons = document.querySelectorAll(".shop-grid button");
+
+    buttons.forEach(btn => {
+        const onclick = btn.getAttribute("onclick");
+        if(!onclick) return;
+
+        const match = onclick.match(/,\s*(\d+)/);
+        if(!match) return;
+
+        const price = match[1];
+
+        if(!btn.innerText.includes("(")){
+            btn.innerText += price == 0 ? " (FREE)" : ` (${price})`;
+        }
+    });
 }
 
-function startGame(){
-    switchScreen("gameScreen");
-    spawnLoop();
+/* 🎨 UI */
+function updateShopUI(){
+    const buttons = document.querySelectorAll(".shop-grid button");
+
+    buttons.forEach(btn => {
+
+        const onclick = btn.getAttribute("onclick");
+        if(!onclick) return;
+
+        const color = onclick.match(/'(.*?)'/)[1];
+        const price = onclick.match(/,\s*(\d+)/)[1];
+
+        if(currentSkin === color){
+            btn.innerText = "EQUIPADO";
+        }
+        else if(ownedSkins.includes(color)){
+            btn.innerText = "USAR";
+        }
+        else{
+            btn.innerText = `COMPRAR (${price})`;
+        }
+    });
 }
 
-get("playBtn").onclick = startGame;
-
-/* 🎮 SPAWN */
-function spawnLoop(){
-    setInterval(spawnSkull, 800);
+/* 🔊 */
+function playBuySound(){
+    const s = get("buySound");
+    if(s){
+        s.currentTime = 0;
+        s.play();
+    }
 }
 
-function spawnSkull(){
+/* 💥 */
+function playUnlockEffect(){
+    const e = document.createElement("div");
+    e.className = "explosion";
+    e.style.left = "50%";
+    e.style.top = "50%";
+    e.style.background = currentSkin;
+    document.body.appendChild(e);
+    setTimeout(()=>e.remove(),400);
+}
+
+/* 🛒 */
+const oldBuySkin = buySkin;
+
+buySkin = function(color, price){
+
+    if(ownedSkins.includes(color)){
+        currentSkin = color;
+        updateShopUI();
+        return;
+    }
+
+    if(wallet < price){
+        alert("No tienes suficientes puntos 💀");
+        return;
+    }
+
+    wallet -= price;
+    ownedSkins.push(color);
+    currentSkin = color;
+
+    updateUI();
+
+    playBuySound();
+    playUnlockEffect();
+
+    updateShopUI();
+};
+
+/* 🌈 spawn extendido */
+const oldSpawn = spawnSkull;
+
+spawnSkull = function(){
+
     const skull = document.createElement("div");
-    skull.className = "target";
+    skull.className = "target"; 
     skull.innerHTML = "💀";
 
-    skull.style.left = Math.random()*250 + "px";
-    skull.style.top = Math.random()*250 + "px";
+    skull.style.left = Math.random() * 80 + 5 + "%";
+    skull.style.top = Math.random() * 80 + 5 + "%";
 
     if(currentSkin === "rainbow"){
         skull.style.animation = "rainbowGlow 1s infinite";
@@ -41,87 +116,25 @@ function spawnSkull(){
     }
 
     skull.onclick = () => {
-        score += 10;
+        score += 10 * multiplier;
         wallet += 1;
+        multiplier++;
 
-        get("score").innerText = score;
-        get("walletAmount").innerText = wallet;
+        updateUI();
 
-        playHit();
+        if(get("hitSound")){
+            get("hitSound").currentTime = 0;
+            get("hitSound").play();
+        }
+
         skull.remove();
     };
 
     get("gameArea").appendChild(skull);
-    setTimeout(()=>skull.remove(),1000);
-}
+    setTimeout(() => { if(skull) skull.remove(); }, 1200);
+};
 
-/* 🔊 */
-function playHit(){
-    const s = get("hitSound");
-    s.currentTime = 0;
-    s.play();
-}
-
-function playBuy(){
-    const s = get("buySound");
-    s.currentTime = 0;
-    s.play();
-}
-
-/* 💥 */
-function explode(x,y){
-    const e = document.createElement("div");
-    e.className="explosion";
-    e.style.left=x+"px";
-    e.style.top=y+"px";
-    e.style.background=currentSkin;
-    document.body.appendChild(e);
-    setTimeout(()=>e.remove(),400);
-}
-
-/* 🛒 */
-function buySkin(color, price){
-
-    if(ownedSkins.includes(color)){
-        currentSkin = color;
-        updateShop();
-        return;
-    }
-
-    if(wallet < price){
-        alert("No tienes dinero 💀");
-        return;
-    }
-
-    wallet -= price;
-    ownedSkins.push(color);
-    currentSkin = color;
-
-    get("walletAmount").innerText = wallet;
-
-    playBuy();
-    explode(window.innerWidth/2, window.innerHeight/2);
-
-    updateShop();
-}
-
-/* 🧠 */
-function updateShop(){
-    const btns = document.querySelectorAll(".shop-grid button");
-
-    btns.forEach(btn=>{
-        const txt = btn.getAttribute("onclick");
-        const color = txt.match(/'(.*?)'/)[1];
-        const price = txt.match(/,\s*(\d+)/)[1];
-
-        if(currentSkin === color){
-            btn.innerText = "EQUIPADO";
-        } else if(ownedSkins.includes(color)){
-            btn.innerText = "USAR";
-        } else {
-            btn.innerText = `COMPRAR (${price})`;
-        }
-    });
-}
-
-updateShop();
+window.addEventListener("load", () => {
+    applyPricesToShop();
+    updateShopUI();
+});
