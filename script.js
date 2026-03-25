@@ -1,7 +1,3 @@
-/* =========================
-   💀 REPARACIONES DE PATRIC
-========================= */
-
 const client = window.supabase.createClient(
     "https://thkuxitmdfwthyadcytx.supabase.co",
     "sb_publishable_ifOy7_StfYvwy287J88FSA_l-LseoVd"
@@ -14,7 +10,7 @@ let currentSkin = "var(--neon-magenta)";
 let ownedSkins = ["var(--neon-magenta)"];
 let gameTimer, spawnTimer;
 
-// --- 1. REPARACIÓN DE NOMBRES EN TIENDA ---
+// --- 1. NOMBRES EN TIENDA ---
 function updateShopUI() {
     const buttons = document.querySelectorAll(".shop-grid button");
     buttons.forEach(btn => {
@@ -46,7 +42,7 @@ function updateShopUI() {
     });
 }
 
-// --- 2. REPARACIÓN DE RANKING ---
+// --- 2. RANKING ---
 async function showRanking() {
     const { data, error } = await client
         .from('scores')
@@ -67,7 +63,7 @@ async function showRanking() {
     switchScreen('ranking');
 }
 
-// --- FUNCIONES BASE (SIN MODIFICAR LÓGICA) ---
+// --- FUNCIONES BASE ---
 function updateUI() {
     if(get("score")) get("score").innerText = score;
     if(get("time")) get("time").innerText = time;
