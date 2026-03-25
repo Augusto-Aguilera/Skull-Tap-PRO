@@ -194,15 +194,11 @@ input:checked + .slider:before {
     transform: translateX(24px); 
 }
 
-/* 💰 PRECIOS EN TIENDA (SIN TOCAR HTML) */
-.shop-grid button:nth-child(1)::after {
-    content: " (FREE)";
-}
-.shop-grid button:nth-child(2)::after {
-    content: " (500)";
-}
-.shop-grid button:nth-child(3)::after {
-    content: " (1000)";
+/* 💰 MEJORA VISUAL DE PRECIOS */
+.shop-grid button {
+    letter-spacing: 1px;
+    font-size: 0.95rem;
+    text-shadow: 0 0 5px rgba(0,255,200,0.3);
 }
 
 /* ✨ EFECTOS */
