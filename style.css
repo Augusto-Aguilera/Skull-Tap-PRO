@@ -113,7 +113,7 @@ button:hover {
     /* 🔥 FONDO MOLOCH */
     background: 
         linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)),
-        url("https://images.unsplash.com/photo-1608889175512-5c1d6c2a4f3e");
+        url("img/moloch.jpg");
     background-size: cover;
     background-position: center;
 }
