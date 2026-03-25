@@ -163,10 +163,6 @@ window.addEventListener("load", () => {
     applyPricesToShop();
     updateShopUI();
 });
-/* =========================
-   🔐 LOGIN SUPABASE FIX
-========================= */
-
 const client = window.supabase.createClient(
     "https://thkuxitmdfwthyadcytx.supabase.co",
     "sb_publishable_ifOy7_StfYvwy287J88FSA_l-LseoVd"
