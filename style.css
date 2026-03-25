@@ -1,175 +1,72 @@
-:root {
-    --neon-cyan: #00fbff;
-    --neon-magenta: #ff00ff;
-    --neon-green: #00ffcc;
+body{
+margin:0;
+font-family:Arial;
+background:black;
+color:white;
+text-align:center;
+overflow:hidden;
 }
 
-body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    font-family: Arial, sans-serif;
-    color: white;
-    overflow: hidden;
+.screen{display:none;height:100vh;justify-content:center;align-items:center;flex-direction:column;}
+.screen.active{display:flex;}
+
+.logo{font-size:3rem;color:#0ff;text-shadow:0 0 20px #0ff;}
+
+.btn-giant{padding:20px 40px;font-size:1.5rem;cursor:pointer;}
+
+#gameArea{
+width:90vw;
+height:60vh;
+border:3px solid cyan;
+position:relative;
+overflow:hidden;
+
+/* 🔥 FONDO TIPO MOLOCH */
+background:
+linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.9)),
+url("https://images.unsplash.com/photo-1608889175512-5c1d6c2a4f3e");
+background-size:cover;
+background-position:center;
 }
 
-.bg-overlay {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('img/fondoo.jpg');
-    background-size: cover;
-    background-position: center;
+/* CALAVERAS NEON */
+.target{
+position:absolute;
+font-size:50px;
+cursor:pointer;
+transition:transform 0.1s;
 }
 
-.screen {
-    display: none;
-    width: 100%;
-    height: 100%;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 20px;
+.target:active{transform:scale(0.7);}
+
+/* EXPLOSION */
+.explosion{
+position:absolute;
+width:20px;
+height:20px;
+border-radius:50%;
+animation:explode 0.4s forwards;
 }
 
-.screen.active { display: flex; }
-
-.logo {
-    font-size: 3rem;
-    text-shadow: 0 0 20px var(--neon-cyan);
+@keyframes explode{
+to{
+transform:scale(5);
+opacity:0;
+}
 }
 
-.auth-container {
-    background: rgba(0,0,0,0.6);
-    padding: 20px;
-    border-radius: 15px;
-    margin: 20px 0;
-    width: 100%;
-    max-width: 320px;
+/* PARTICULAS */
+.particle{
+position:absolute;
+width:5px;
+height:5px;
+border-radius:50%;
+animation:particle 0.6s linear forwards;
 }
 
-.input-group input {
-    width: 90%;
-    padding: 12px;
-    margin: 5px 0;
-    border-radius: 8px;
-    border: none;
-    background: #222;
-    color: white;
+@keyframes particle{
+to{
+transform:translate(var(--x),var(--y));
+opacity:0;
 }
-
-button {
-    cursor: pointer;
-    border: 2px solid var(--neon-green);
-    background: none;
-    color: var(--neon-green);
-    padding: 15px 25px;
-    border-radius: 30px;
-    font-weight: bold;
-    transition: 0.3s;
-    margin: 10px;
-}
-
-button:hover {
-    background: var(--neon-green);
-    color: black;
-    box-shadow: 0 0 20px var(--neon-green);
-}
-
-.btn-giant {
-    width: 280px;
-    font-size: 1.4rem;
-    padding: 20px;
-    background: var(--neon-green);
-    color: black;
-}
-
-.btn-outline {
-    border-color: white;
-    color: white;
-}
-
-#gameArea {
-    width: 90vw;
-    max-width: 400px;
-    height: 50vh;
-    border: 3px solid var(--neon-cyan);
-    border-radius: 20px;
-    position: relative;
-    overflow: hidden;
-}
-
-/* TARGET UNIFICADO */
-.target {
-    width: 70px;
-    height: 70px;
-    font-size: 50px;
-    position: absolute;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    cursor: pointer;
-    user-select: none;
-    transition: transform 0.1s;
-}
-
-.target:active {
-    transform: scale(0.8);
-}
-
-.status-bar {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 15px;
-}
-
-.mode-selector {
-    margin-bottom: 20px;
-    display: flex;
-    gap: 10px;
-}
-
-.switch {
-    position: relative;
-    width: 50px;
-    height: 26px;
-}
-
-.switch input { display: none; }
-
-.slider {
-    position: absolute;
-    inset: 0;
-    background: #444;
-    border-radius: 30px;
-}
-
-.slider:before {
-    content: "";
-    position: absolute;
-    height: 18px;
-    width: 18px;
-    left: 4px;
-    bottom: 4px;
-    background: white;
-    border-radius: 50%;
-}
-
-input:checked + .slider {
-    background: var(--neon-magenta);
-}
-
-input:checked + .slider:before {
-    transform: translateX(24px);
-}
-
-.footer-copy {
-    position: absolute;
-    bottom: 20px;
-    font-size: 0.7rem;
-    color: rgba(255,255,255,0.4);
 }
