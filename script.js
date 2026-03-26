@@ -1,5 +1,5 @@
 /* =========================
-   💀 SKULL TAP PRO - REPARADO Y MEJORADO POR PATRIC
+   💀 SKULL TAP PRO 
 ========================= */
 
 const client = window.supabase.createClient(
