@@ -30,11 +30,17 @@
             </div>
         </div>
         <p id="userStatus" class="status-msg">Sincroniza tu progreso global</p>
+        <div id="streakDisplay" class="streak-badge" style="display:none;">🔥 Racha: 0 días</div>
         <button id="logoutBtn" style="display:none;" class="btn-mini btn-outline-red">Cerrar Sesión</button>
     </div>
 
+    <div class="weekly-challenges-hud" id="weeklyChallenges">
+        <div class="hud-header">📅 DESAFÍOS SEMANALES</div>
+        <div id="weeklyList"></div>
+    </div>
+
     <div class="daily-missions-hud" id="dailyMissions">
-        <div class="hud-header">📅 OBJETIVOS DIARIOS</div>
+        <div class="hud-header">🎯 OBJETIVOS DIARIOS</div>
         <div id="missionsList"></div>
     </div>
 
@@ -50,7 +56,8 @@
 </div>
 
 <div id="gameScreen" class="screen">
-    <div id="levelFlash" class="level-flash"></div> <div id="bossHealthBar" class="boss-health-container" style="display:none;">
+    <div id="levelFlash" class="level-flash"></div> 
+    <div id="bossHealthBar" class="boss-health-container" style="display:none;">
         <div class="boss-label">⚠️ BOSS APARECE ⚠️</div>
         <div class="hp-bg"><div id="hpFill" class="hp-fill"></div></div>
     </div>
@@ -81,6 +88,7 @@
         <p id="xpGainedDisplay"></p>
     </div>
     <button id="restartBtn" class="btn-giant">REINTENTAR</button>
+    <button id="shareWaBtn" class="btn-outline" style="border-color: #25D366; color: #25D366;">📲 COMPARTIR PROGRESO</button>
     <button onclick="goHome()" class="btn-outline">INICIO</button>
 </div>
 
