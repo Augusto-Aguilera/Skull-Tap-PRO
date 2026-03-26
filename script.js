@@ -1,12 +1,8 @@
 /* =========================
-   💀 BASE + BACKEND + COMBO + DIFICULTAD PRO
+   💀 BASE + PRO + ENEMIGOS
 ========================= */
 
 function get(id){ return document.getElementById(id); }
-
-/* =========================
-   🔐 SUPABASE
-========================= */
 
 const client = window.supabase.createClient(
     "https://thkuxitmdfwthyadcytx.supabase.co",
@@ -16,7 +12,7 @@ const client = window.supabase.createClient(
 let currentUser = null;
 
 /* =========================
-   🎮 GAME STATE
+   🎮 STATE
 ========================= */
 
 let score = 0, time = 15, wallet = 0;
@@ -238,70 +234,58 @@ function startGame(){
     spawnTimer = setInterval(spawnLoop, spawnSpeed);
 }
 
-/* 💀 NUEVO LOOP PROGRESIVO */
+/* 💀 LOOP */
 function spawnLoop(){
-
     spawnSkull();
 
     if(spawnSpeed > 300){
         spawnSpeed -= 10;
-
         clearInterval(spawnTimer);
         spawnTimer = setInterval(spawnLoop, spawnSpeed);
     }
 }
 
+/* 💀 SPAWN */
 function spawnSkull(){
+
+    const isFake = Math.random() < 0.25; // 25% enemigos
 
     const skull = document.createElement("div");
     skull.className = "target";
-    skull.innerHTML = "💀";
+
+    if(isFake){
+        skull.innerHTML = "☠️"; // enemigo
+        skull.style.filter = "drop-shadow(0 0 10px red)";
+    } else {
+        skull.innerHTML = "💀";
+        skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
+    }
 
     skull.style.left = Math.random()*80+5+"%";
     skull.style.top = Math.random()*80+5+"%";
 
-    skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
-
     skull.onclick = ()=>{
 
-        score += 10 * multiplier;
-        wallet += 1;
-        multiplier++;
+        if(isFake){
+            // ❌ castigo
+            score -= 20;
+            multiplier = 1;
 
-        clearTimeout(comboTimer);
-        comboTimer = setTimeout(resetCombo, 1200);
+            const area = get("gameArea");
+            area.classList.add("shake");
+            setTimeout(()=>area.classList.remove("shake"),300);
 
-        updateUI();
+        } else {
+            // ✅ normal
+            score += 10 * multiplier;
+            wallet += 1;
+            multiplier++;
 
-        // 💥 explosión
-        const explosion = document.createElement("div");
-        explosion.className = "explosion";
-        explosion.style.left = skull.style.left;
-        explosion.style.top = skull.style.top;
-        explosion.style.background = currentSkin;
-        get("gameArea").appendChild(explosion);
-        setTimeout(()=>explosion.remove(),400);
-
-        // ✨ partículas
-        for(let i=0;i<8;i++){
-            const p = document.createElement("div");
-            p.className = "particle";
-            p.style.background = currentSkin;
-
-            p.style.setProperty("--x", (Math.random()*100-50)+"px");
-            p.style.setProperty("--y", (Math.random()*100-50)+"px");
-
-            p.style.left = skull.style.left;
-            p.style.top = skull.style.top;
-
-            get("gameArea").appendChild(p);
-            setTimeout(()=>p.remove(),600);
+            clearTimeout(comboTimer);
+            comboTimer = setTimeout(resetCombo, 1200);
         }
 
-        // 📳 shake
-        const area = get("gameArea");
-        area.classList.add("shake");
-        setTimeout(()=>area.classList.remove("shake"),200);
+        updateUI();
 
         get("hitSound").currentTime = 0;
         get("hitSound").play();
@@ -310,7 +294,6 @@ function spawnSkull(){
     };
 
     get("gameArea").appendChild(skull);
-
     setTimeout(()=>skull.remove(),1200);
 }
 
@@ -344,4 +327,3 @@ function goHome(){
 window.addEventListener("load", ()=>{
     updateShopUI();
 });
-
