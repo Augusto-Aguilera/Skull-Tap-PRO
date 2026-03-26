@@ -24,7 +24,6 @@ body, html {
 
 .screen.active { display: flex; }
 
-/* Animación del Logo */
 .logo { 
     font-size: 3rem; 
     text-shadow: 0 0 20px var(--neon-cyan); 
@@ -38,7 +37,6 @@ body, html {
     100% { transform: scale(1); text-shadow: 0 0 20px var(--neon-cyan); }
 }
 
-/* Contenedores de Interfaz */
 .auth-container { 
     background: rgba(0,0,0,0.6); 
     padding: 20px; 
@@ -50,58 +48,34 @@ body, html {
 }
 
 .input-group input { 
-    width: 90%; 
-    padding: 12px; 
-    margin: 5px 0; 
-    border-radius: 8px; 
-    border: none; 
-    background: #222; 
-    color: white; 
+    width: 90%; padding: 12px; margin: 5px 0; 
+    border-radius: 8px; border: none; background: #222; color: white; 
 }
 
 button {
-    cursor: pointer; 
-    border: 2px solid var(--neon-green); 
-    background: none;
-    color: var(--neon-green); 
-    padding: 15px 25px; 
-    border-radius: 30px;
-    font-weight: bold; 
-    font-size: 1rem; 
-    transition: 0.3s; 
-    margin: 10px;
+    cursor: pointer; border: 2px solid var(--neon-green); background: none;
+    color: var(--neon-green); padding: 15px 25px; border-radius: 30px;
+    font-weight: bold; font-size: 1rem; transition: 0.3s; margin: 10px;
 }
 
 button:hover { 
-    background: var(--neon-green); 
-    color: black; 
-    box-shadow: 0 0 20px var(--neon-green); 
+    background: var(--neon-green); color: black; box-shadow: 0 0 20px var(--neon-green); 
 }
 
 .btn-giant {
-    width: 280px; 
-    font-size: 1.4rem; 
-    padding: 20px;
-    background: var(--neon-green); 
-    color: black; 
-    box-shadow: 0 0 15px var(--neon-green);
+    width: 280px; font-size: 1.4rem; padding: 20px;
+    background: var(--neon-green); color: black; box-shadow: 0 0 15px var(--neon-green);
 }
 
 .btn-outline { border-color: white; color: white; }
 
-/* Área de Juego */
 #gameArea {
-    width: 90vw; 
-    max-width: 400px; 
-    height: 50vh;
-    border: 3px solid var(--neon-cyan); 
-    border-radius: 20px;
-    position: relative; 
-    overflow: hidden;
+    width: 90vw; max-width: 400px; height: 50vh;
+    border: 3px solid var(--neon-cyan); border-radius: 20px;
+    position: relative; overflow: hidden;
     box-shadow: 0 0 20px var(--neon-cyan);
     background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.9)), url('img/moloch.jpg');
-    background-size: cover;
-    background-position: 50% 20%;
+    background-size: cover; background-position: 50% 20%;
 }
 
 .target {
@@ -115,54 +89,45 @@ button:hover {
 
 .status-bar { font-size: 1.2rem; margin-bottom: 15px; display: flex; gap: 20px; }
 
-/* Sistema de Logros CSS */
+/* Logros */
 .achievements-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    width: 100%;
-    max-width: 400px;
-    margin: 20px 0;
-    max-height: 40vh;
-    overflow-y: auto;
-    padding: 10px;
+    display: grid; grid-template-columns: 1fr; gap: 10px;
+    width: 100%; max-width: 450px; margin: 20px 0;
+    max-height: 50vh; overflow-y: auto; padding-right: 10px;
 }
 
 .achievement-card {
     background: rgba(255, 255, 255, 0.05);
-    padding: 15px;
-    border-radius: 10px;
-    border: 1px solid #333;
-    transition: 0.3s;
-    opacity: 0.3; 
-    filter: grayscale(1);
+    padding: 12px; border-radius: 10px; border: 1px solid #333;
+    display: flex; flex-direction: column; align-items: flex-start;
+    opacity: 0.3; filter: grayscale(1); transition: 0.4s;
 }
 
 .achievement-card.unlocked {
-    opacity: 1;
-    filter: grayscale(0);
-    border-color: var(--neon-cyan);
-    background: rgba(0, 251, 255, 0.1);
-    box-shadow: 0 0 10px rgba(0, 251, 255, 0.2);
+    opacity: 1; filter: grayscale(0); border-color: var(--neon-green);
+    background: rgba(0, 255, 204, 0.1);
 }
+
+.ach-tier { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; margin-bottom: 5px; }
+.tier-facil { background: #555; color: white; }
+.tier-medio { background: #2196F3; color: white; }
+.tier-dificil { background: #FF9800; color: white; }
+
+.achievement-card h4 { margin: 0; font-size: 1rem; color: var(--neon-green); }
+.achievement-card p { margin: 2px 0 0 0; font-size: 0.8rem; color: #bbb; }
 
 .achievement-toast {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.9);
-    border-left: 5px solid var(--neon-cyan);
-    padding: 15px 25px;
-    border-radius: 5px;
-    color: white;
-    box-shadow: 0 0 15px rgba(0, 251, 255, 0.4);
-    animation: slideInToast 0.5s ease-out;
-    z-index: 1000;
+    position: fixed; bottom: 20px; right: 20px;
+    background: #000; border-left: 5px solid var(--neon-green);
+    padding: 15px 25px; border-radius: 5px; color: white;
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+    animation: slideInToast 0.5s ease-out; z-index: 2000;
 }
 
-/* Ranking List */
+@keyframes slideInToast { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
 .ranking-list {
-    list-style: none; padding: 0; width: 100%; max-width: 300px;
+    list-style: none; padding: 0; width: 100%; max-width: 320px;
     margin: 20px 0; font-size: 1.1rem;
 }
 .ranking-list li {
@@ -170,18 +135,10 @@ button:hover {
     display: flex; justify-content: space-between;
 }
 
-/* Animaciones y Efectos */
-@keyframes rainbowGlow {
-    0% { filter: drop-shadow(0 0 10px red); }
-    25% { filter: drop-shadow(0 0 10px yellow); }
-    50% { filter: drop-shadow(0 0 10px lime); }
-    75% { filter: drop-shadow(0 0 10px cyan); }
-    100% { filter: drop-shadow(0 0 10px magenta); }
-}
-
+/* Efectos Partículas */
 .explosion-fx {
     position: absolute; width: 20px; height: 20px; border-radius: 50%;
-    transform: translate(-50%, -50%); pointer-events: none; z-index: 5;
+    transform: translate(-50%, -50%); pointer-events: none;
     animation: explodeAnim 0.4s ease-out forwards;
 }
 
@@ -192,7 +149,7 @@ button:hover {
 
 .skull-splatter {
     position: absolute; font-size: 40px; transform: translate(-50%, -50%);
-    pointer-events: none; z-index: 6; animation: splatterAnim 0.7s ease-out forwards;
+    pointer-events: none; animation: splatterAnim 0.7s ease-out forwards;
 }
 
 @keyframes splatterAnim {
@@ -200,14 +157,9 @@ button:hover {
     100% { transform: translate(-50%, -50%) scale(1.5) translateY(-60px); opacity: 0; }
 }
 
-@keyframes slideInToast { from { transform: translateX(100%); } to { transform: translateX(0); } }
-
 .footer-copy {
     position: absolute; bottom: 20px; font-size: 0.7rem;
     color: rgba(255, 255, 255, 0.4); text-transform: uppercase;
-    letter-spacing: 1px; pointer-events: none;
 }
 
-.shop-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
-}
+.shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
