@@ -1,9 +1,8 @@
 
 /* =========================
-   💀 BASE + EXPANSIÓN FINAL
+   💀 BASE + BACKEND PRO
 ========================= */
 
-/* helper */
 function get(id){ return document.getElementById(id); }
 
 /* =========================
@@ -25,8 +24,10 @@ let score = 0, time = 15, wallet = 0, multiplier = 1;
 let currentSkin = "var(--neon-magenta)";
 let ownedSkins = ["var(--neon-magenta)"];
 
+let gameTimer, spawnTimer;
+
 /* =========================
-   💾 LOAD / SAVE
+   💾 PROFILE (wallet + skins)
 ========================= */
 
 async function loadProfile(){
@@ -62,6 +63,53 @@ async function saveProfile(){
 }
 
 /* =========================
+   🏆 RANKING REAL
+========================= */
+
+async function saveScore(){
+    if(!currentUser) return;
+
+    const name = currentUser.email.split("@")[0];
+
+    // ver si ya existe
+    const { data } = await client
+        .from("scores")
+        .select("*")
+        .eq("name", name)
+        .maybeSingle();
+
+    if(data){
+        // guardar solo si es mejor
+        if(score > data.score){
+            await client.from("scores").update({ score }).eq("name", name);
+        }
+    } else {
+        await client.from("scores").insert([{ name, score }]);
+    }
+}
+
+async function showRanking(){
+
+    const { data } = await client
+        .from("scores")
+        .select("*")
+        .order("score", { ascending: false })
+        .limit(10);
+
+    const list = get("rankingList");
+
+    if(!data || data.length === 0){
+        list.innerHTML = "<li>No hay puntajes aún</li>";
+    } else {
+        list.innerHTML = data
+            .map((p,i)=> `<li>${i+1}. ${p.name}: ${p.score} pts</li>`)
+            .join("");
+    }
+
+    goTo("rankingScreen");
+}
+
+/* =========================
    🔐 LOGIN
 ========================= */
 
@@ -82,7 +130,8 @@ window.addEventListener("load", () => {
         }
 
         currentUser = data.user;
-        get("userStatus").innerText = "Conectado como: " + email.split("@")[0];
+        get("userStatus").innerText =
+            "Conectado como: " + email.split("@")[0];
 
         loadProfile();
     };
@@ -103,6 +152,7 @@ window.addEventListener("load", () => {
         }
     };
 
+    get("rankingBtn").onclick = showRanking;
 });
 
 /* =========================
@@ -150,7 +200,7 @@ function buySkin(color, price){
 
     get("buySound").play();
 
-    saveProfile(); // 💾 GUARDA
+    saveProfile();
 }
 
 /* =========================
@@ -168,8 +218,7 @@ function startGame(){
     time = 15;
     multiplier = 1;
 
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    get("gameScreen").classList.add("active");
+    goTo("gameScreen");
 
     updateUI();
 
@@ -222,10 +271,10 @@ function endGame(){
     get("gameArea").innerHTML = "";
     get("finalScore").innerText = score + " pts";
 
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    get("gameOverScreen").classList.add("active");
+    goTo("gameOverScreen");
 
-    saveProfile(); // 💾 GUARDA
+    saveProfile();
+    saveScore(); // 🏆 GUARDA SCORE
 }
 
 /* =========================
