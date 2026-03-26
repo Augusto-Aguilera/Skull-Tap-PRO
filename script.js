@@ -114,7 +114,7 @@ function spawnPowerUp() {
         if (puData.type === "double") {
             doublePoints = true; 
             showNotice("¡DOBLE PUNTAJE!");
-            updateMultipliersDisplay(); // Mejora: Multiplicador en pantalla
+            updateMultipliersDisplay();
             setTimeout(() => {
                 doublePoints = false;
                 updateMultipliersDisplay();
@@ -126,7 +126,6 @@ function spawnPowerUp() {
     setTimeout(() => { if(pu.parentElement) pu.remove(); }, 3000);
 }
 
-// MEJORA: FUNCIÓN PARA ACTUALIZAR MULTIPLICADORES EN PANTALLA
 function updateMultipliersDisplay() {
     const container = get("activeMultipliers");
     container.innerHTML = "";
@@ -191,7 +190,7 @@ function spawnSkull() {
             xp = Math.max(0, xp - 50);
             combo = 1; comboHits = 0;
             updateUI();
-            updateMultipliersDisplay(); // Actualizar multiplicadores
+            updateMultipliersDisplay();
             showNotice("¡CASTIGO: -200 PTS!");
             screenVibrate();
             if(get("badHitSound")) { get("badHitSound").currentTime = 0; get("badHitSound").play(); }
@@ -209,7 +208,7 @@ function spawnSkull() {
                 comboHits++;
                 if (comboHits % 5 === 0) {
                     combo++;
-                    updateMultipliersDisplay(); // Actualizar vista de multiplicadores
+                    updateMultipliersDisplay();
                 }
             } else { 
                 combo = 1; comboHits = 0; 
@@ -275,16 +274,41 @@ function createHitEffects(x, y) {
     }
 }
 
+// MEJORA: EFECTO VISUAL DE SUBIDA DE NIVEL
+function celebrateLevelUp() {
+    const flash = get("levelFlash");
+    flash.style.animation = "none";
+    flash.offsetHeight; // trigger reflow
+    flash.style.animation = "flashAnim 0.8s ease-out";
+    
+    for (let i = 0; i < 20; i++) {
+        const p = document.createElement("div");
+        p.className = "level-up-particle";
+        p.style.width = p.style.height = (Math.random() * 8 + 4) + "px";
+        p.style.left = "50%"; p.style.top = "50%";
+        p.style.background = ["var(--neon-gold)", "white", "var(--neon-cyan)"][Math.floor(Math.random()*3)];
+        document.body.appendChild(p);
+        
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 300 + 100;
+        p.animate([
+            { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+            { transform: `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px)) scale(0)`, opacity: 0 }
+        ], { duration: 1500, easing: 'ease-out' }).onfinish = () => p.remove();
+    }
+}
+
 function addXP(amount) {
     xp += amount;
     const nextLevelXP = level * 1000;
     if (xp >= nextLevelXP) { 
         level++; 
-        xp = 0; // Opcional: reiniciar XP tras subir nivel
+        xp = xp - nextLevelXP; // Mantener sobrante de XP
         showAchievementToast(`¡NIVEL ${level}!`); 
+        celebrateLevelUp(); // MEJORA: LLAMADA A CELEBRACIÓN
         saveProgress(); 
     }
-    updateUI(); // Esto asegura que la barra se actualice en tiempo real
+    updateUI();
 }
 
 function updateMissions(skulls, curCombo, pts) {
@@ -330,7 +354,7 @@ function showAchievementToast(msg) {
 function endGame() {
     clearInterval(gameTimer); clearInterval(spawnTimer); clearInterval(puTimer);
     get("gameArea").innerHTML = "";
-    get("activeMultipliers").innerHTML = ""; // Limpiar multiplicadores al terminar
+    get("activeMultipliers").innerHTML = "";
     get("finalScore").innerText = score + " pts";
     switchScreen('gameOver');
     saveProgress();
@@ -380,11 +404,10 @@ function updateUI() {
     get("walletAmount").innerText = wallet; 
     get("displayLevel").innerText = level;
     
-    // MEJORA: ACTUALIZACIÓN DE BARRA DE XP
     const nextLevelXP = level * 1000;
     const xpPercent = (xp / nextLevelXP) * 100;
     get("xpFill").style.width = xpPercent + "%";
-    get("xpText").innerText = `${xp} / ${nextLevelXP} XP`;
+    get("xpText").innerText = `${Math.floor(xp)} / ${nextLevelXP} XP`;
 
     if(combo > 1) { 
         get("comboWrapper").classList.remove("combo-hidden"); 
