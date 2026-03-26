@@ -83,14 +83,13 @@ async function saveProgress() {
 
 // --- MOTOR DE JUEGO ---
 function startGame() {
-    // ACTIVAR MÚSICA
     const music = get("bgMusic");
     if(music) {
         music.volume = 0.3;
         music.play().catch(e => console.log("Interacción requerida para audio"));
     }
 
-    score = 0; time = 15; combo = 1; comboHits = 0; bossActive = false;
+    score = 0; time = 15; combo = 1; comboHits = 0; bossActive = false; doublePoints = false;
     get("bossHealthBar").style.display = "none";
     switchScreen('game');
     updateUI();
@@ -113,13 +112,40 @@ function spawnPowerUp() {
     
     pu.onclick = () => {
         if (puData.type === "double") {
-            doublePoints = true; showNotice("¡DOBLE PUNTAJE!");
-            setTimeout(() => doublePoints = false, 5000);
+            doublePoints = true; 
+            showNotice("¡DOBLE PUNTAJE!");
+            updateMultipliersDisplay(); // Mejora: Multiplicador en pantalla
+            setTimeout(() => {
+                doublePoints = false;
+                updateMultipliersDisplay();
+            }, 5000);
         } else { time += 5; showNotice("+5 SEGUNDOS"); }
         pu.remove();
     };
     get("gameArea").appendChild(pu);
     setTimeout(() => { if(pu.parentElement) pu.remove(); }, 3000);
+}
+
+// MEJORA: FUNCIÓN PARA ACTUALIZAR MULTIPLICADORES EN PANTALLA
+function updateMultipliersDisplay() {
+    const container = get("activeMultipliers");
+    container.innerHTML = "";
+    
+    if (combo > 1) {
+        const comboBadge = document.createElement("div");
+        comboBadge.className = "badge-multiplier";
+        comboBadge.innerText = `COMBO X${combo}`;
+        container.appendChild(comboBadge);
+    }
+    
+    if (doublePoints) {
+        const doubleBadge = document.createElement("div");
+        doubleBadge.className = "badge-multiplier";
+        doubleBadge.style.borderColor = "var(--neon-cyan)";
+        doubleBadge.style.color = "var(--neon-cyan)";
+        doubleBadge.innerText = "PUNTOS X2";
+        container.appendChild(doubleBadge);
+    }
 }
 
 function spawnBoss() {
@@ -165,6 +191,7 @@ function spawnSkull() {
             xp = Math.max(0, xp - 50);
             combo = 1; comboHits = 0;
             updateUI();
+            updateMultipliersDisplay(); // Actualizar multiplicadores
             showNotice("¡CASTIGO: -200 PTS!");
             screenVibrate();
             if(get("badHitSound")) { get("badHitSound").currentTime = 0; get("badHitSound").play(); }
@@ -180,8 +207,14 @@ function spawnSkull() {
             const now = Date.now();
             if (now - lastHitTime < 1000) {
                 comboHits++;
-                if (comboHits % 5 === 0) combo++;
-            } else { combo = 1; comboHits = 0; }
+                if (comboHits % 5 === 0) {
+                    combo++;
+                    updateMultipliersDisplay(); // Actualizar vista de multiplicadores
+                }
+            } else { 
+                combo = 1; comboHits = 0; 
+                updateMultipliersDisplay();
+            }
             lastHitTime = now;
 
             let pts = 10 * combo;
@@ -203,7 +236,11 @@ function spawnSkull() {
     setTimeout(() => { 
         if(skull.parentElement) {
             skull.remove();
-            if (!isDistraction) { combo = 1; comboHits = 0; updateUI(); }
+            if (!isDistraction) { 
+                combo = 1; comboHits = 0; 
+                updateUI(); 
+                updateMultipliersDisplay();
+            }
         } 
     }, lifetime);
 }
@@ -240,11 +277,14 @@ function createHitEffects(x, y) {
 
 function addXP(amount) {
     xp += amount;
-    if (xp >= level * 1000) { 
+    const nextLevelXP = level * 1000;
+    if (xp >= nextLevelXP) { 
         level++; 
+        xp = 0; // Opcional: reiniciar XP tras subir nivel
         showAchievementToast(`¡NIVEL ${level}!`); 
         saveProgress(); 
     }
+    updateUI(); // Esto asegura que la barra se actualice en tiempo real
 }
 
 function updateMissions(skulls, curCombo, pts) {
@@ -290,6 +330,7 @@ function showAchievementToast(msg) {
 function endGame() {
     clearInterval(gameTimer); clearInterval(spawnTimer); clearInterval(puTimer);
     get("gameArea").innerHTML = "";
+    get("activeMultipliers").innerHTML = ""; // Limpiar multiplicadores al terminar
     get("finalScore").innerText = score + " pts";
     switchScreen('gameOver');
     saveProgress();
@@ -338,6 +379,13 @@ function updateUI() {
     get("time").innerText = time;
     get("walletAmount").innerText = wallet; 
     get("displayLevel").innerText = level;
+    
+    // MEJORA: ACTUALIZACIÓN DE BARRA DE XP
+    const nextLevelXP = level * 1000;
+    const xpPercent = (xp / nextLevelXP) * 100;
+    get("xpFill").style.width = xpPercent + "%";
+    get("xpText").innerText = `${xp} / ${nextLevelXP} XP`;
+
     if(combo > 1) { 
         get("comboWrapper").classList.remove("combo-hidden"); 
         get("comboText").innerText = "x" + combo; 
