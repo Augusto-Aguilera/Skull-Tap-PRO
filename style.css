@@ -6,7 +6,7 @@
 
 body, html {
     margin: 0; padding: 0; width: 100%; height: 100%;
-    font-family: 'Arial', sans-serif; color: white; overflow: hidden;
+    font-family: 'Segoe UI', Arial, sans-serif; color: white; overflow: hidden;
 }
 
 .bg-overlay {
@@ -24,19 +24,21 @@ body, html {
 
 .screen.active { display: flex; }
 
+/* Animación del Logo */
 .logo { 
     font-size: 3rem; 
     text-shadow: 0 0 20px var(--neon-cyan); 
     margin-bottom: 20px; 
-    animation: pulse 2s infinite;
+    animation: pulseLogo 2s infinite;
 }
 
-@keyframes pulse {
+@keyframes pulseLogo {
     0% { transform: scale(1); text-shadow: 0 0 20px var(--neon-cyan); }
     50% { transform: scale(1.05); text-shadow: 0 0 40px var(--neon-cyan); }
     100% { transform: scale(1); text-shadow: 0 0 20px var(--neon-cyan); }
 }
 
+/* Contenedores de Interfaz */
 .auth-container { 
     background: rgba(0,0,0,0.6); 
     padding: 20px; 
@@ -85,11 +87,9 @@ button:hover {
     box-shadow: 0 0 15px var(--neon-green);
 }
 
-.btn-outline { 
-    border-color: white; 
-    color: white; 
-}
+.btn-outline { border-color: white; color: white; }
 
+/* Área de Juego */
 #gameArea {
     width: 90vw; 
     max-width: 400px; 
@@ -115,7 +115,7 @@ button:hover {
 
 .status-bar { font-size: 1.2rem; margin-bottom: 15px; display: flex; gap: 20px; }
 
-/* Logros / Achievements */
+/* Sistema de Logros CSS */
 .achievements-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -156,11 +156,21 @@ button:hover {
     border-radius: 5px;
     color: white;
     box-shadow: 0 0 15px rgba(0, 251, 255, 0.4);
-    animation: slideIn 0.5s ease-out, fadeOut 0.5s 2.5s forwards;
+    animation: slideInToast 0.5s ease-out;
     z-index: 1000;
 }
 
-/* Efectos Visuales */
+/* Ranking List */
+.ranking-list {
+    list-style: none; padding: 0; width: 100%; max-width: 300px;
+    margin: 20px 0; font-size: 1.1rem;
+}
+.ranking-list li {
+    padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex; justify-content: space-between;
+}
+
+/* Animaciones y Efectos */
 @keyframes rainbowGlow {
     0% { filter: drop-shadow(0 0 10px red); }
     25% { filter: drop-shadow(0 0 10px yellow); }
@@ -190,8 +200,7 @@ button:hover {
     100% { transform: translate(-50%, -50%) scale(1.5) translateY(-60px); opacity: 0; }
 }
 
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+@keyframes slideInToast { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
 .footer-copy {
     position: absolute; bottom: 20px; font-size: 0.7rem;
@@ -199,10 +208,6 @@ button:hover {
     letter-spacing: 1px; pointer-events: none;
 }
 
-/* Tienda Grid */
 .shop-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 20px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
 }
