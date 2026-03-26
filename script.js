@@ -13,6 +13,10 @@ let ownedSkins = ["var(--neon-magenta)"];
 let unlockedAchievements = [];
 let gameTimer, spawnTimer, puTimer;
 
+// MEJORA: DATOS DE RACHA
+let streakCount = 0;
+let lastLoginDate = null; // Guardado en Supabase
+
 // Boss, Powerups y Distracción
 let bossActive = false, bossHP = 100;
 let doublePoints = false;
@@ -20,11 +24,31 @@ let doublePoints = false;
 // Combo
 let combo = 1, comboHits = 0, lastHitTime = 0;
 
-// Misiones Diarias Hardcore
+// PLAYLIST DINÁMICA
+const PLAYLIST = [
+    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+];
+
+// Misiones Diarias
 let missions = [
     { id: 1, text: "Exterminio Total", goal: 500, current: 0, completed: false, reward: 1000 },
     { id: 2, text: "Maestro del Combo", goal: 15, current: 0, completed: false, reward: 1500 },
     { id: 3, text: "Avaricia Pura", goal: 5000, current: 0, completed: false, reward: 2000 }
+];
+
+const getWeekNumber = () => {
+    const d = new Date();
+    d.setHours(0,0,0,0);
+    d.setDate(d.getDate() + 4 - (d.getDay()||7));
+    return Math.ceil((((d - new Date(d.getFullYear(),0,1))/8.64e7)+1)/7);
+};
+
+let weeklyChallenges = [
+    { id: 101, text: "Semana del Terror", goal: 20000, current: 0, completed: false, reward: 5000, week: getWeekNumber() },
+    { id: 102, text: "Asesino de Bosses", goal: 10, current: 0, completed: false, reward: 8000, week: getWeekNumber() }
 ];
 
 const ACHIEVEMENTS_LIST = {
@@ -43,12 +67,14 @@ async function checkSession() {
         currentUser = session.user;
         toggleAuthUI(true);
         await loadUserData();
+        checkDailyStreak(); // MEJORA: Comprobar racha al entrar
     }
 }
 
 function toggleAuthUI(isLoggedIn) {
     get("authInputs").style.display = isLoggedIn ? "none" : "block";
     get("logoutBtn").style.display = isLoggedIn ? "inline-block" : "none";
+    get("streakDisplay").style.display = isLoggedIn ? "inline-block" : "none";
     if (isLoggedIn && currentUser) {
         get("userStatus").innerText = `HOLA, ${currentUser.email.split('@')[0].toUpperCase()}`;
     } else {
@@ -62,11 +88,44 @@ async function loadUserData() {
     const { data } = await client.from('scores').select('*').eq('name', userName).single();
     if (data) {
         wallet = data.wallet || 0; xp = data.xp || 0; level = data.level || 1;
+        streakCount = data.streak || 0;
+        lastLoginDate = data.last_login;
         if (data.skins) ownedSkins = data.skins.split(',');
         if (data.achievements) unlockedAchievements = data.achievements.split(',');
         updateUI(); updateShopUI();
     }
     renderMissions();
+    renderWeeklyChallenges();
+}
+
+// MEJORA: LÓGICA DE RACHA DIARIA
+function checkDailyStreak() {
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (lastLoginDate === today) {
+        get("streakDisplay").innerText = `🔥 Racha: ${streakCount} días`;
+        return;
+    }
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    if (lastLoginDate === yesterdayStr) {
+        streakCount++;
+    } else {
+        streakCount = 1;
+    }
+
+    // REGALO DIARIO: 300 base + (50 por cada día de racha)
+    // En una semana con racha, ganaría ~2500-3000 pts solo por entrar.
+    const reward = 300 + (streakCount * 50);
+    wallet += reward;
+    lastLoginDate = today;
+
+    showAchievementToast(`¡BONO DIARIO! +${reward} PTS (Día ${streakCount})`);
+    get("streakDisplay").innerText = `🔥 Racha: ${streakCount} días`;
+    saveProgress();
 }
 
 async function saveProgress() {
@@ -77,18 +136,14 @@ async function saveProgress() {
 
     await client.from('scores').upsert([{ 
         name: userName, score: topScore, wallet: wallet, xp: xp, level: level,
-        skins: ownedSkins.join(','), achievements: unlockedAchievements.join(',')
+        skins: ownedSkins.join(','), achievements: unlockedAchievements.join(','),
+        streak: streakCount, last_login: lastLoginDate
     }], { onConflict: 'name' });
 }
 
 // --- MOTOR DE JUEGO ---
 function startGame() {
-    const music = get("bgMusic");
-    if(music) {
-        music.volume = 0.3;
-        music.play().catch(e => console.log("Interacción requerida para audio"));
-    }
-
+    updateMusic();
     score = 0; time = 15; combo = 1; comboHits = 0; bossActive = false; doublePoints = false;
     get("bossHealthBar").style.display = "none";
     switchScreen('game');
@@ -100,6 +155,19 @@ function startGame() {
     }, 1000);
     spawnTimer = setInterval(spawnSkull, 800);
     puTimer = setInterval(spawnPowerUp, 7000); 
+}
+
+function updateMusic() {
+    const music = get("bgMusic");
+    if(!music) return;
+    let trackIndex = Math.min(Math.floor((level - 1) / 5), PLAYLIST.length - 1);
+    let targetSrc = PLAYLIST[trackIndex];
+    if (music.src !== targetSrc) {
+        music.src = targetSrc;
+        music.load();
+    }
+    music.volume = 0.3;
+    music.play().catch(e => console.log("Interacción requerida"));
 }
 
 function spawnPowerUp() {
@@ -129,14 +197,12 @@ function spawnPowerUp() {
 function updateMultipliersDisplay() {
     const container = get("activeMultipliers");
     container.innerHTML = "";
-    
     if (combo > 1) {
         const comboBadge = document.createElement("div");
         comboBadge.className = "badge-multiplier";
         comboBadge.innerText = `COMBO X${combo}`;
         container.appendChild(comboBadge);
     }
-    
     if (doublePoints) {
         const doubleBadge = document.createElement("div");
         doubleBadge.className = "badge-multiplier";
@@ -168,6 +234,7 @@ function spawnBoss() {
             score += 500; wallet += 50; addXP(200); bossActive = false;
             boss.remove(); get("bossHealthBar").style.display = "none";
             showNotice("BOSS DERROTADO: +500 PTS");
+            updateWeeklyChallenges(0, 1);
             spawnTimer = setInterval(spawnSkull, 800);
         }
     };
@@ -215,12 +282,12 @@ function spawnSkull() {
                 updateMultipliersDisplay();
             }
             lastHitTime = now;
-
             let pts = 10 * combo;
             if (doublePoints) pts *= 2; 
-
             score += pts; wallet += 1; addXP(25);
-            updateMissions(1, combo, pts); checkAchievements(); updateUI();
+            updateMissions(1, combo, pts); 
+            updateWeeklyChallenges(pts, 0);
+            checkAchievements(); updateUI();
             createHitEffects(e.clientX, e.clientY); screenVibrate();
             if(get("hitSound")) { get("hitSound").currentTime = 0; get("hitSound").play(); }
             skull.remove();
@@ -274,13 +341,11 @@ function createHitEffects(x, y) {
     }
 }
 
-// MEJORA: EFECTO VISUAL DE SUBIDA DE NIVEL
 function celebrateLevelUp() {
     const flash = get("levelFlash");
     flash.style.animation = "none";
-    flash.offsetHeight; // trigger reflow
+    flash.offsetHeight;
     flash.style.animation = "flashAnim 0.8s ease-out";
-    
     for (let i = 0; i < 20; i++) {
         const p = document.createElement("div");
         p.className = "level-up-particle";
@@ -288,7 +353,6 @@ function celebrateLevelUp() {
         p.style.left = "50%"; p.style.top = "50%";
         p.style.background = ["var(--neon-gold)", "white", "var(--neon-cyan)"][Math.floor(Math.random()*3)];
         document.body.appendChild(p);
-        
         const angle = Math.random() * Math.PI * 2;
         const dist = Math.random() * 300 + 100;
         p.animate([
@@ -303,9 +367,10 @@ function addXP(amount) {
     const nextLevelXP = level * 1000;
     if (xp >= nextLevelXP) { 
         level++; 
-        xp = xp - nextLevelXP; // Mantener sobrante de XP
+        xp = xp - nextLevelXP; 
         showAchievementToast(`¡NIVEL ${level}!`); 
-        celebrateLevelUp(); // MEJORA: LLAMADA A CELEBRACIÓN
+        celebrateLevelUp(); 
+        updateMusic();
         saveProgress(); 
     }
     updateUI();
@@ -326,10 +391,32 @@ function updateMissions(skulls, curCombo, pts) {
     renderMissions();
 }
 
+function updateWeeklyChallenges(pts, bosses) {
+    weeklyChallenges.forEach(w => {
+        if (w.completed) return;
+        if (w.id === 101) w.current += pts;
+        if (w.id === 102) w.current += bosses;
+        if (w.current >= w.goal) {
+            w.completed = true;
+            wallet += w.reward;
+            showAchievementToast(`¡Desafío Semanal! +${w.reward} PTS`);
+        }
+    });
+    renderWeeklyChallenges();
+}
+
 function renderMissions() {
     get("missionsList").innerHTML = missions.map(m => `
         <div class="mission-item ${m.completed ? 'completed' : ''}">
             <b>${m.text}:</b> ${m.completed ? 'OK' : m.current + '/' + m.goal}
+        </div>
+    `).join("");
+}
+
+function renderWeeklyChallenges() {
+    get("weeklyList").innerHTML = weeklyChallenges.map(w => `
+        <div class="mission-item ${w.completed ? 'completed' : ''}">
+            <b>${w.text}:</b> ${w.completed ? 'OK' : w.current + '/' + w.goal}
         </div>
     `).join("");
 }
@@ -358,6 +445,12 @@ function endGame() {
     get("finalScore").innerText = score + " pts";
     switchScreen('gameOver');
     saveProgress();
+}
+
+function shareProgress() {
+    const text = `💀 ¡Acabo de conseguir ${score} puntos en Skull Tap PRO! Soy nivel ${level}. ¿Puedes superarme?`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
 }
 
 function buySkin(color, price) {
@@ -403,12 +496,10 @@ function updateUI() {
     get("time").innerText = time;
     get("walletAmount").innerText = wallet; 
     get("displayLevel").innerText = level;
-    
     const nextLevelXP = level * 1000;
     const xpPercent = (xp / nextLevelXP) * 100;
     get("xpFill").style.width = xpPercent + "%";
     get("xpText").innerText = `${Math.floor(xp)} / ${nextLevelXP} XP`;
-
     if(combo > 1) { 
         get("comboWrapper").classList.remove("combo-hidden"); 
         get("comboText").innerText = "x" + combo; 
@@ -423,12 +514,13 @@ window.onload = () => {
     get("playBtn").onclick = startGame; 
     get("restartBtn").onclick = startGame;
     get("rankingBtn").onclick = showRanking;
+    get("shareWaBtn").onclick = shareProgress;
 
     get("loginBtn").onclick = async () => {
         const email = get("email").value, password = get("password").value;
         const { data, error } = await client.auth.signInWithPassword({ email, password });
         if (error) alert("Error: " + error.message);
-        else { currentUser = data.user; toggleAuthUI(true); await loadUserData(); }
+        else { currentUser = data.user; toggleAuthUI(true); await loadUserData(); checkDailyStreak(); }
     };
 
     get("registerBtn").onclick = async () => {
