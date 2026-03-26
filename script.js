@@ -1,395 +1,374 @@
-/* ========================================
-   SKULL TAP PRO - NÚCLEO DE LÓGICA 2026
-   ======================================== */
-
-// 1. CONFIGURACIÓN SUPABASE
-const supabaseUrl = "https://thkuxitmdfwthyadcytx.supabase.co";
-const supabaseKey = "sb_publishable_ifOy7_StfYvwy287J88FSA_l-LseoVd";
-const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+const client = window.supabase.createClient(
+    "https://thkuxitmdfwthyadcytx.supabase.co",
+    "sb_publishable_ifOy7_StfYvwy287J88FSA_l-LseoVd"
+);
 
 const get = (id) => document.getElementById(id);
-
-// 2. ESTADO GLOBAL DEL JUGADOR
 let currentUser = null;
-let score = 0;
-let time = 15;
-let wallet = 0;
-let xp = 0;
-let level = 1;
 
-// 3. SISTEMA DE COMBOS Y SKIN
-let combo = 1;
-let comboTimer = null;
+// Variables de Estado
+let score = 0, time = 15, wallet = 0, xp = 0, level = 1;
 let currentSkin = "var(--neon-magenta)";
 let ownedSkins = ["var(--neon-magenta)"];
 let unlockedAchievements = [];
+let gameTimer, spawnTimer, puTimer;
 
-// 4. MOTOR DE TIEMPO
-let gameInterval = null;
-let spawnInterval = null;
-let spawnRate = 850;
+// Boss, Powerups y Distracción
+let bossActive = false, bossHP = 100;
+let doublePoints = false;
 
-// 5. MISIONES DIARIAS (Objeto detallado)
-let dailyTasks = [
-    { id: "T1", title: "Cazador de Sombras", desc: "Aplasta 40 calaveras", goal: 40, current: 0, done: false, reward: 150 },
-    { id: "T2", title: "Frenesí Neón", desc: "Llega a Combo x7", goal: 7, current: 0, done: false, reward: 300 },
-    { id: "T3", title: "Avaricia", desc: "Gana 1200 puntos", goal: 1200, current: 0, done: false, reward: 500 }
+// Combo
+let combo = 1, comboHits = 0, lastHitTime = 0;
+
+// Misiones Diarias Hardcore
+let missions = [
+    { id: 1, text: "Exterminio Total", goal: 500, current: 0, completed: false, reward: 1000 },
+    { id: 2, text: "Maestro del Combo", goal: 15, current: 0, completed: false, reward: 1500 },
+    { id: 3, text: "Avaricia Pura", goal: 5000, current: 0, completed: false, reward: 2000 }
 ];
 
-// 6. DICCIONARIO COMPLETO DE LOGROS
-const ACHIEVEMENTS = {
-    "F1": { name: "Primer Impacto", tier: "facil", desc: "Suma 100 puntos en una partida.", req: () => score >= 100 },
-    "F2": { name: "Ritmo Suave", tier: "facil", desc: "Consigue un Combo x3.", req: () => combo >= 3 },
-    "F3": { name: "Iniciado", tier: "facil", desc: "Llega al Nivel 2.", req: () => level >= 2 },
-    
-    "M1": { name: "Aniquilador", tier: "medio", desc: "Suma 1000 puntos en una partida.", req: () => score >= 1000 },
-    "M2": { name: "Velocidad de Luz", tier: "medio", desc: "Consigue un Combo x8.", req: () => combo >= 8 },
-    "M3": { name: "Veterano de Guerra", tier: "medio", desc: "Llega al Nivel 5.", req: () => level >= 5 },
-    
-    "D1": { name: "MAESTRO SUPREMO", tier: "dificil", desc: "Haz 5000 puntos en un juego.", req: () => score >= 5000 },
-    "D2": { name: "Estado de Trance", tier: "dificil", desc: "Consigue un Combo x15.", req: () => combo >= 15 },
-    "D3": { name: "Leyenda del Inframundo", tier: "dificil", desc: "Alcanza el Nivel 10.", req: () => level >= 10 }
+const ACHIEVEMENTS_LIST = {
+    "F1": { name: "Primer Paso", tier: "facil", desc: "Suma 100 puntos", req: () => score >= 100 },
+    "F2": { name: "Iniciado", tier: "facil", desc: "Llega al Nivel 2", req: () => level >= 2 },
+    "M1": { name: "Cazador Neón", tier: "medio", desc: "Suma 1500 puntos", req: () => score >= 1500 },
+    "M2": { name: "Veterano", tier: "medio", desc: "Llega al Nivel 10", req: () => level >= 10 },
+    "D1": { name: "DIOS DEL CRÁNEO", tier: "dificil", desc: "10,000 puntos en una partida", req: () => score >= 10000 },
+    "D2": { name: "Leyenda Viviente", tier: "dificil", desc: "Llega al Nivel 30", req: () => level >= 30 }
 };
 
-/* --- FUNCIONES DE PERSISTENCIA (LOGIN ARREGLADO) --- */
+// --- AUTH & DATA ---
+async function checkSession() {
+    const { data: { session } } = await client.auth.getSession();
+    if (session) {
+        currentUser = session.user;
+        toggleAuthUI(true);
+        await loadUserData();
+    }
+}
 
-async function syncData() {
+function toggleAuthUI(isLoggedIn) {
+    get("authInputs").style.display = isLoggedIn ? "none" : "block";
+    get("logoutBtn").style.display = isLoggedIn ? "inline-block" : "none";
+    if (isLoggedIn && currentUser) {
+        get("userStatus").innerText = `HOLA, ${currentUser.email.split('@')[0].toUpperCase()}`;
+    } else {
+        get("userStatus").innerText = "Sincroniza tu progreso global";
+    }
+}
+
+async function loadUserData() {
     if (!currentUser) return;
-    const name = currentUser.email.split('@')[0];
-
-    const { data } = await client.from('scores').select('*').eq('name', name).single();
-    
+    const userName = currentUser.email.split('@')[0];
+    const { data } = await client.from('scores').select('*').eq('name', userName).single();
     if (data) {
-        wallet = data.wallet || 0;
-        xp = data.xp || 0;
-        level = data.level || 1;
+        wallet = data.wallet || 0; xp = data.xp || 0; level = data.level || 1;
         if (data.skins) ownedSkins = data.skins.split(',');
         if (data.achievements) unlockedAchievements = data.achievements.split(',');
-        updateUI();
-        renderDailyTasks();
+        updateUI(); updateShopUI();
     }
+    renderMissions();
 }
 
-async function saveSession() {
+async function saveProgress() {
     if (!currentUser) return;
-    const name = currentUser.email.split('@')[0];
+    const userName = currentUser.email.split('@')[0];
+    const { data: record } = await client.from('scores').select('score').eq('name', userName).single();
+    const topScore = record ? Math.max(record.score, score) : score;
 
-    // Buscar record anterior
-    const { data: old } = await client.from('scores').select('score').eq('name', name).single();
-    const topScore = old ? Math.max(old.score, score) : score;
-
-    await client.from('scores').upsert({
-        name: name,
-        score: topScore,
-        wallet: wallet,
-        xp: xp,
-        level: level,
-        skins: ownedSkins.join(','),
-        achievements: unlockedAchievements.join(',')
-    }, { onConflict: 'name' });
+    await client.from('scores').upsert([{ 
+        name: userName, score: topScore, wallet: wallet, xp: xp, level: level,
+        skins: ownedSkins.join(','), achievements: unlockedAchievements.join(',')
+    }], { onConflict: 'name' });
 }
 
-/* --- MOTOR DE JUEGO --- */
+// --- MOTOR DE JUEGO ---
+function startGame() {
+    // ACTIVAR MÚSICA
+    const music = get("bgMusic");
+    if(music) {
+        music.volume = 0.3;
+        music.play().catch(e => console.log("Interacción requerida para audio"));
+    }
 
-function startNewGame() {
-    score = 0;
-    time = 15;
-    combo = 1;
-    spawnRate = 850;
-    
+    score = 0; time = 15; combo = 1; comboHits = 0; bossActive = false;
+    get("bossHealthBar").style.display = "none";
     switchScreen('game');
     updateUI();
-    resetComboUI();
-
-    gameInterval = setInterval(() => {
-        time--;
-        get("time").innerText = time;
-        if (time <= 0) stopGame();
+    gameTimer = setInterval(() => { 
+        time--; 
+        updateUI(); 
+        if (time <= 0) endGame(); 
     }, 1000);
-
-    spawnInterval = setInterval(createTarget, spawnRate);
+    spawnTimer = setInterval(spawnSkull, 800);
+    puTimer = setInterval(spawnPowerUp, 7000); 
 }
 
-function createTarget() {
-    const area = get("gameArea");
-    const target = document.createElement("div");
-    target.className = "target";
-    target.innerHTML = "💀";
+function spawnPowerUp() {
+    if (bossActive) return;
+    const types = [{icon: "⚡", type: "double"}, {icon: "⏳", type: "time"}];
+    const puData = types[Math.floor(Math.random() * types.length)];
+    const pu = document.createElement("div");
+    pu.className = "power-up"; pu.innerHTML = puData.icon;
+    pu.style.left = Math.random() * 80 + 5 + "%"; pu.style.top = Math.random() * 80 + 5 + "%";
     
-    const x = Math.random() * (area.clientWidth - 80) + 10;
-    const y = Math.random() * (area.clientHeight - 80) + 10;
-    target.style.left = x + "px";
-    target.style.top = y + "px";
-
-    if(currentSkin === "rainbow") target.style.animation = "rainbowGlow 1s infinite";
-    else target.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
-
-    target.onclick = (e) => {
-        handleHit(e.clientX, e.clientY);
-        target.remove();
+    pu.onclick = () => {
+        if (puData.type === "double") {
+            doublePoints = true; showNotice("¡DOBLE PUNTAJE!");
+            setTimeout(() => doublePoints = false, 5000);
+        } else { time += 5; showNotice("+5 SEGUNDOS"); }
+        pu.remove();
     };
-
-    area.appendChild(target);
-    
-    // Si no la tocas, pierdes el combo
-    setTimeout(() => {
-        if(target.parentElement) {
-            target.remove();
-            breakCombo();
-        }
-    }, 1100);
+    get("gameArea").appendChild(pu);
+    setTimeout(() => { if(pu.parentElement) pu.remove(); }, 3000);
 }
 
-function handleHit(clickX, clickY) {
-    // Multiplicador por combo
-    const pts = 10 * combo;
-    score += pts;
-    wallet += 1;
-    xp += (5 * combo);
+function spawnBoss() {
+    bossActive = true; bossHP = 100;
+    clearInterval(spawnTimer);
+    get("bossHealthBar").style.display = "block";
+    get("hpFill").style.width = "100%";
+    const boss = document.createElement("div");
+    boss.className = "target boss"; boss.innerHTML = "👺";
+    boss.style.left = "50%"; boss.style.top = "50%";
+    boss.style.transform = "translate(-50%, -50%)";
 
-    // Actualizar Misiones
-    trackMissions(1, pts);
+    boss.onclick = (e) => {
+        bossHP -= 5;
+        get("hpFill").style.width = bossHP + "%";
+        createHitEffects(e.clientX, e.clientY); screenVibrate();
+        boss.style.transform = "translate(-50%, -50%) scale(1.1)";
+        setTimeout(() => boss.style.transform = "translate(-50%, -50%) scale(1)", 50);
 
-    // Incrementar Combo
-    combo++;
-    updateComboUI();
+        if (bossHP <= 0) {
+            score += 500; wallet += 50; addXP(200); bossActive = false;
+            boss.remove(); get("bossHealthBar").style.display = "none";
+            showNotice("BOSS DERROTADO: +500 PTS");
+            spawnTimer = setInterval(spawnSkull, 800);
+        }
+    };
+    get("gameArea").appendChild(boss);
+}
 
-    // Efectos
-    spawnNeonParticles(clickX, clickY);
-    vibrateScreen();
-    
-    // Sonido
-    const hitSnd = get("hitSound");
-    hitSnd.currentTime = 0;
-    hitSnd.play();
+function spawnSkull() {
+    if (bossActive) return;
+    if (level % 5 === 0 && !bossActive && score > 0) { spawnBoss(); return; }
 
-    // Niveles
-    if (xp >= level * 600) {
-        level++;
-        showToast(`🆙 ¡NIVEL ${level}!`);
+    const area = get("gameArea");
+    const skull = document.createElement("div");
+    const isDistraction = Math.random() < 0.15;
+
+    if (isDistraction) {
+        skull.className = "target distraction";
+        skull.innerHTML = "😡";
+        skull.onclick = () => {
+            score = Math.max(0, score - 200);
+            xp = Math.max(0, xp - 50);
+            combo = 1; comboHits = 0;
+            updateUI();
+            showNotice("¡CASTIGO: -200 PTS!");
+            screenVibrate();
+            if(get("badHitSound")) { get("badHitSound").currentTime = 0; get("badHitSound").play(); }
+            skull.remove();
+        };
+    } else {
+        skull.className = "target";
+        skull.innerHTML = "💀";
+        if(currentSkin === "rainbow") skull.style.animation = "rainbowGlow 1s infinite";
+        else skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
+
+        skull.onclick = (e) => {
+            const now = Date.now();
+            if (now - lastHitTime < 1000) {
+                comboHits++;
+                if (comboHits % 5 === 0) combo++;
+            } else { combo = 1; comboHits = 0; }
+            lastHitTime = now;
+
+            let pts = 10 * combo;
+            if (doublePoints) pts *= 2; 
+
+            score += pts; wallet += 1; addXP(25);
+            updateMissions(1, combo, pts); checkAchievements(); updateUI();
+            createHitEffects(e.clientX, e.clientY); screenVibrate();
+            if(get("hitSound")) { get("hitSound").currentTime = 0; get("hitSound").play(); }
+            skull.remove();
+        };
     }
 
-    checkAchievements();
-    updateUI();
-}
-
-/* --- SISTEMA DE COMBOS --- */
-
-function updateComboUI() {
-    clearTimeout(comboTimer);
-    const box = get("comboContainer");
-    box.classList.remove("combo-hide");
-    box.classList.add("combo-active");
-    get("comboVal").innerText = "x" + combo;
+    skull.style.left = Math.random() * 80 + 5 + "%";
+    skull.style.top = Math.random() * 80 + 5 + "%";
+    area.appendChild(skull);
     
-    // Tienes 1.3 segundos para mantener el combo
-    comboTimer = setTimeout(breakCombo, 1300);
+    const lifetime = isDistraction ? 1500 : 1200;
+    setTimeout(() => { 
+        if(skull.parentElement) {
+            skull.remove();
+            if (!isDistraction) { combo = 1; comboHits = 0; updateUI(); }
+        } 
+    }, lifetime);
 }
 
-function breakCombo() {
-    combo = 1;
-    resetComboUI();
+function showNotice(msg) {
+    const n = get("powerUpNotice");
+    n.innerText = msg; n.style.opacity = "1";
+    setTimeout(() => n.style.opacity = "0", 2000);
 }
 
-function resetComboUI() {
-    const box = get("comboContainer");
-    box.classList.add("combo-hide");
-    box.classList.remove("combo-active");
+function screenVibrate() {
+    get("gameArea").classList.add("shake");
+    setTimeout(() => get("gameArea").classList.remove("shake"), 200);
 }
 
-/* --- EFECTOS VISUALES (SIN SIMPLIFICAR) --- */
-
-function vibrateScreen() {
-    const area = get("gameArea");
-    area.classList.add("shake");
-    setTimeout(() => area.classList.remove("shake"), 200);
-}
-
-function spawnNeonParticles(x, y) {
+function createHitEffects(x, y) {
+    const colors = ["#00fbff", "#ff00ff", "#00ffcc", "#fff000"];
     const area = get("gameArea");
     const rect = area.getBoundingClientRect();
-    const colors = ["#00fbff", "#ff00ff", "#00ffcc", "#fff000", "#ff5500"];
-    
-    for(let i=0; i < 10; i++) {
+    for (let i = 0; i < 8; i++) {
         const p = document.createElement("div");
-        p.className = "neon-particle";
-        p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        p.style.left = (x - rect.left) + "px";
-        p.style.top = (y - rect.top) + "px";
-        
-        // Dirección aleatoria
-        const tx = (Math.random() - 0.5) * 250;
-        const ty = (Math.random() - 0.5) * 250;
-        p.style.setProperty('--x', tx + "px");
-        p.style.setProperty('--y', ty + "px");
-        
+        p.className = "particle"; p.style.width = "5px"; p.style.height = "5px";
+        p.style.left = (x - rect.left) + "px"; p.style.top = (y - rect.top) + "px";
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = Math.random() * 100 + 50;
         area.appendChild(p);
-        setTimeout(() => p.remove(), 600);
+        p.animate([
+            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+            { transform: `translate(${Math.cos(angle)*velocity}px, ${Math.sin(angle)*velocity}px) scale(0)`, opacity: 0 }
+        ], { duration: 600 }).onfinish = () => p.remove();
     }
 }
 
-/* --- SISTEMA DE MISIONES --- */
-
-function trackMissions(skulls, points) {
-    dailyTasks.forEach(task => {
-        if (task.done) return;
-
-        if (task.id === "T1") task.current += skulls;
-        if (task.id === "T2" && combo > task.current) task.current = combo;
-        if (task.id === "T3") task.current += points;
-
-        if (task.current >= task.goal) {
-            task.done = true;
-            wallet += task.reward;
-            showToast(`✅ MISIÓN: ${task.title} (+${task.reward} PTS)`);
-        }
-    });
-    renderDailyTasks();
+function addXP(amount) {
+    xp += amount;
+    if (xp >= level * 1000) { 
+        level++; 
+        showAchievementToast(`¡NIVEL ${level}!`); 
+        saveProgress(); 
+    }
 }
 
-function renderDailyTasks() {
-    const container = get("dailyTasksList");
-    container.innerHTML = dailyTasks.map(t => `
-        <div class="task-item ${t.done ? 'completed' : ''}">
-            <span>${t.desc}</span>
-            <b>${t.done ? 'COMPLETO' : t.current + '/' + t.goal}</b>
+function updateMissions(skulls, curCombo, pts) {
+    missions.forEach(m => {
+        if (m.completed) return;
+        if (m.id === 1) m.current += skulls;
+        if (m.id === 2) m.current = Math.max(m.current, curCombo);
+        if (m.id === 3) m.current += pts;
+        if (m.current >= m.goal) { 
+            m.completed = true; 
+            wallet += m.reward; 
+            showAchievementToast(`Misión Completa: +${m.reward} PTS`); 
+        }
+    });
+    renderMissions();
+}
+
+function renderMissions() {
+    get("missionsList").innerHTML = missions.map(m => `
+        <div class="mission-item ${m.completed ? 'completed' : ''}">
+            <b>${m.text}:</b> ${m.completed ? 'OK' : m.current + '/' + m.goal}
         </div>
     `).join("");
 }
 
-/* --- PANTALLAS Y NAVEGACIÓN --- */
-
 function checkAchievements() {
-    Object.keys(ACHIEVEMENTS).forEach(key => {
-        if (!unlockedAchievements.includes(key) && ACHIEVEMENTS[key].req()) {
-            unlockedAchievements.push(key);
-            showToast(`🏆 LOGRO: ${ACHIEVEMENTS[key].name}`);
-            saveSession();
+    Object.keys(ACHIEVEMENTS_LIST).forEach(key => {
+        if (!unlockedAchievements.includes(key) && ACHIEVEMENTS_LIST[key].req()) { 
+            unlockedAchievements.push(key); 
+            showAchievementToast(`Logro: ${ACHIEVEMENTS_LIST[key].name}`); 
+            saveProgress(); 
         }
     });
 }
 
-function showToast(msg) {
-    const toast = document.createElement("div");
-    toast.className = "achievement-toast";
-    toast.innerText = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = "0";
-        setTimeout(() => toast.remove(), 500);
-    }, 3500);
+function showAchievementToast(msg) {
+    const t = document.createElement("div");
+    t.className = "achievement-toast"; t.innerHTML = `🏆 ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
 }
 
-function updateUI() {
-    get("score").innerText = score;
-    get("walletAmount").innerText = wallet;
-    get("displayLevel").innerText = level;
-    if (currentUser) {
-        const nick = currentUser.email.split('@')[0].toUpperCase();
-        get("userStatus").innerText = `BIENVENIDO, ${nick} | LVL ${level}`;
-    }
-}
-
-function stopGame() {
-    clearInterval(gameInterval);
-    clearInterval(spawnInterval);
+function endGame() {
+    clearInterval(gameTimer); clearInterval(spawnTimer); clearInterval(puTimer);
     get("gameArea").innerHTML = "";
     get("finalScore").innerText = score + " pts";
-    get("xpGained").innerText = `+${xp} XP TOTAL`;
     switchScreen('gameOver');
-    saveSession();
+    saveProgress();
 }
 
-function buySkin(skinId, price) {
-    if (ownedSkins.includes(skinId)) {
-        currentSkin = skinId;
-        showToast("Estilo equipado correctamente.");
-        updateShopUI();
-        return;
-    }
-
-    if (wallet >= price) {
-        wallet -= price;
-        ownedSkins.push(skinId);
-        currentSkin = skinId;
-        get("buySound").play();
-        showToast("¡Nueva skin adquirida!");
-        updateShopUI();
-        updateUI();
-        saveSession();
-    } else {
-        alert("No tienes suficientes almas para esta compra.");
-    }
+function buySkin(color, price) {
+    if(ownedSkins.includes(color)) { currentSkin = color; updateShopUI(); return; }
+    if(wallet < price) { alert("Puntos insuficientes"); return; }
+    wallet -= price;
+    ownedSkins.push(color); currentSkin = color;
+    updateUI(); updateShopUI();
+    if(get("buySound")) get("buySound").play();
+    saveProgress();
 }
 
 function updateShopUI() {
-    document.querySelectorAll(".shop-item").forEach(btn => {
-        const id = btn.getAttribute("onclick").match(/'(.*?)'/)[1];
-        if (currentSkin === id) {
-            btn.style.borderColor = "var(--neon-cyan)";
-            btn.style.background = "rgba(0, 251, 255, 0.1)";
-        } else if (ownedSkins.includes(id)) {
-            btn.style.borderColor = "#fff";
-            btn.style.background = "transparent";
+    document.querySelectorAll(".shop-grid button").forEach(btn => {
+        const onClickAttr = btn.getAttribute("onclick");
+        if(onClickAttr) {
+            const color = onClickAttr.match(/'(.*?)'/)[1];
+            if(currentSkin === color) { btn.style.borderColor = "var(--neon-cyan)"; btn.style.background = "rgba(0,251,255,0.1)"; }
+            else if(ownedSkins.includes(color)) { btn.style.borderColor = "white"; btn.style.background = "none"; }
         }
     });
 }
 
-async function fetchRanking() {
+async function showRanking() {
     const { data } = await client.from('scores').select('name, score').order('score', { ascending: false }).limit(10);
-    const list = get("rankingList");
-    list.innerHTML = data ? data.map((u, i) => `<li>#${i+1} ${u.name.toUpperCase()} - ${u.score} PTS</li>`).join("") : "Cargando...";
+    get("rankingList").innerHTML = data ? data.map((it, i) => `<li><span>#${i+1} ${it.name.toUpperCase()}</span> <b>${it.score.toLocaleString()} PTS</b></li>`).join("") : "Cargando...";
     switchScreen('ranking');
 }
 
 function showAchievementsScreen() {
-    const list = get("achievementsList");
-    list.innerHTML = "";
-    Object.keys(ACHIEVEMENTS).forEach(key => {
-        const a = ACHIEVEMENTS[key];
-        const unlocked = unlockedAchievements.includes(key);
-        list.innerHTML += `
-            <div class="achievement-card ${unlocked ? 'unlocked' : ''}">
-                <div style="flex:1">
-                    <span class="ach-tier tier-${a.tier}">${a.tier.toUpperCase()}</span>
-                    <h4>${unlocked ? '🏆' : '🔒'} ${a.name}</h4>
-                    <p>${a.desc}</p>
-                </div>
-            </div>`;
-    });
+    get("achievementsList").innerHTML = Object.keys(ACHIEVEMENTS_LIST).map(key => {
+        const ach = ACHIEVEMENTS_LIST[key];
+        const isU = unlockedAchievements.includes(key);
+        return `<div class="achievement-card ${isU ? 'unlocked' : ''} tier-${ach.tier}">
+            <h4>${ach.name}</h4><p>${ach.desc}</p>
+        </div>`;
+    }).join("");
     switchScreen('achievements');
+}
+
+function updateUI() {
+    get("score").innerText = score; 
+    get("time").innerText = time;
+    get("walletAmount").innerText = wallet; 
+    get("displayLevel").innerText = level;
+    if(combo > 1) { 
+        get("comboWrapper").classList.remove("combo-hidden"); 
+        get("comboText").innerText = "x" + combo; 
+    }
+    else get("comboWrapper").classList.add("combo-hidden");
 }
 
 function goHome() { switchScreen('start'); }
 
-/* --- EVENTOS DE INICIO --- */
-
 window.onload = () => {
-    renderDailyTasks();
-    get("playBtn").onclick = startNewGame;
-    get("restartBtn").onclick = startNewGame;
-    get("rankingBtn").onclick = fetchRanking;
+    checkSession();
+    get("playBtn").onclick = startGame; 
+    get("restartBtn").onclick = startGame;
+    get("rankingBtn").onclick = showRanking;
 
     get("loginBtn").onclick = async () => {
-        const { data, error } = await client.auth.signInWithPassword({
-            email: get("email").value,
-            password: get("password").value
-        });
-        if (data.user) {
-            currentUser = data.user;
-            await syncData();
-            showToast("Sincronización completa.");
-        } else {
-            alert("Error al entrar: " + error.message);
-        }
+        const email = get("email").value, password = get("password").value;
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        if (error) alert("Error: " + error.message);
+        else { currentUser = data.user; toggleAuthUI(true); await loadUserData(); }
     };
 
     get("registerBtn").onclick = async () => {
-        const { error } = await client.auth.signUp({
-            email: get("email").value,
-            password: get("password").value
-        });
-        if (error) alert(error.message);
-        else alert("¡Casi listo! Revisa tu email para activar la cuenta.");
+        const email = get("email").value, password = get("password").value;
+        const { error } = await client.auth.signUp({ email, password });
+        if (error) alert("Error: " + error.message);
+        else alert("Revisa tu correo para confirmar.");
+    };
+
+    get("logoutBtn").onclick = async () => {
+        await client.auth.signOut();
+        location.reload();
     };
 };
