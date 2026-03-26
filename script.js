@@ -1,329 +1,251 @@
 /* =========================
-   💀 BASE + PRO + ENEMIGOS
+   💀 SKULL TAP PRO - BASE PATRIC + SYNC SUPABASE
 ========================= */
-
-function get(id){ return document.getElementById(id); }
 
 const client = window.supabase.createClient(
     "https://thkuxitmdfwthyadcytx.supabase.co",
     "sb_publishable_ifOy7_StfYvwy287J88FSA_l-LseoVd"
 );
 
+const get = (id) => document.getElementById(id);
 let currentUser = null;
-
-/* =========================
-   🎮 STATE
-========================= */
-
-let score = 0, time = 15, wallet = 0;
-let multiplier = 1;
-let comboTimer = null;
-
+let score = 0, time = 15, wallet = 0, multiplier = 1;
 let currentSkin = "var(--neon-magenta)";
 let ownedSkins = ["var(--neon-magenta)"];
-
 let gameTimer, spawnTimer;
-let spawnSpeed = 800;
 
-/* =========================
-   💾 PROFILE
-========================= */
+// --- 📈 VARIABLES DE DIFICULTAD PROGRESIVA ---
+let currentLevel = 1;
+let spawnRate = 800; 
+let skullLifetime = 1200; 
+const difficultyThreshold = 500; 
 
-async function loadProfile(){
-    if(!currentUser) return;
+// --- 🔄 SINCRONIZACIÓN CON SUPABASE (NUEVO) ---
+async function loadUserData() {
+    if (!currentUser) return;
+    
+    const { data, error } = await client
+        .from('scores')
+        .select('wallet, skins')
+        .eq('name', currentUser.email.split('@')[0])
+        .single();
 
-    const name = currentUser.email.split("@")[0];
-
-    const { data } = await client
-        .from("profiles")
-        .select("*")
-        .eq("name", name)
-        .maybeSingle();
-
-    if(data){
+    if (data) {
         wallet = data.wallet || 0;
-        ownedSkins = data.skins ? JSON.parse(data.skins) : ownedSkins;
-    }
-
-    updateUI();
-    updateShopUI();
-}
-
-async function saveProfile(){
-    if(!currentUser) return;
-
-    const name = currentUser.email.split("@")[0];
-
-    await client.from("profiles").upsert([{
-        name,
-        wallet,
-        skins: JSON.stringify(ownedSkins)
-    }]);
-}
-
-/* =========================
-   🏆 RANKING
-========================= */
-
-async function saveScore(){
-    if(!currentUser) return;
-
-    const name = currentUser.email.split("@")[0];
-
-    const { data } = await client
-        .from("scores")
-        .select("*")
-        .eq("name", name)
-        .maybeSingle();
-
-    if(data){
-        if(score > data.score){
-            await client.from("scores").update({ score }).eq("name", name);
+        // Si hay skins guardadas, las convertimos de texto a array
+        if (data.skins) {
+            ownedSkins = data.skins.split(',');
         }
-    } else {
-        await client.from("scores").insert([{ name, score }]);
+        updateUI();
+        updateShopUI();
     }
 }
 
-async function showRanking(){
+async function saveScore() {
+    if (!currentUser) return;
+    
+    // Guardamos: nombre, record de puntos, billetera actual y skins como texto
+    const { error } = await client.from('scores').upsert([{ 
+        name: currentUser.email.split('@')[0], 
+        score: score, 
+        wallet: wallet,
+        skins: ownedSkins.join(',')
+    }], { onConflict: 'name' });
 
-    const { data } = await client
-        .from("scores")
-        .select("*")
-        .order("score", { ascending: false })
-        .limit(10);
-
-    const list = get("rankingList");
-
-    list.innerHTML = !data || data.length === 0
-        ? "<li>No hay puntajes aún</li>"
-        : data.map((p,i)=> `<li>${i+1}. ${p.name}: ${p.score} pts</li>`).join("");
-
-    goTo("rankingScreen");
+    if(error) console.error("Error al guardar:", error);
 }
 
-/* =========================
-   🔐 LOGIN
-========================= */
-
-window.addEventListener("load", () => {
-
-    get("playBtn").onclick = startGame;
-    get("restartBtn").onclick = startGame;
-    get("rankingBtn").onclick = showRanking;
-
-    get("loginBtn").onclick = async () => {
-
-        const email = get("email").value;
-        const password = get("password").value;
-
-        const { data, error } = await client.auth.signInWithPassword({
-            email, password
-        });
-
-        if(error){
-            alert(error.message);
-            return;
-        }
-
-        currentUser = data.user;
-        get("userStatus").innerText =
-            "Conectado como: " + email.split("@")[0];
-
-        loadProfile();
-    };
-
-    get("registerBtn").onclick = async () => {
-
-        const email = get("email").value;
-        const password = get("password").value;
-
-        const { error } = await client.auth.signUp({
-            email, password
-        });
-
-        if(error){
-            alert(error.message);
-        } else {
-            alert("Cuenta creada 💀");
-        }
-    };
-
-});
-
-/* =========================
-   💰 SHOP
-========================= */
-
-function updateShopUI(){
-    document.querySelectorAll(".shop-grid button").forEach(btn => {
-
-        const onclick = btn.getAttribute("onclick");
-        const color = onclick.match(/'(.*?)'/)[1];
-        const price = onclick.match(/,\s*(\d+)/)[1];
-
-        if(currentSkin === color){
-            btn.innerText = "EQUIPADO";
-        }
-        else if(ownedSkins.includes(color)){
-            btn.innerText = "USAR";
-        }
-        else{
-            btn.innerText = `COMPRAR (${price})`;
-        }
-    });
-}
-
-function buySkin(color, price){
-
-    if(ownedSkins.includes(color)){
+// --- 🛒 TIENDA REPARADA CON GUARDADO ---
+async function buySkin(color, price) {
+    if(ownedSkins.includes(color)) {
         currentSkin = color;
         updateShopUI();
         return;
     }
-
-    if(wallet < price){
+    if(wallet < price) {
         alert("No tienes suficientes puntos 💀");
         return;
     }
-
+    
     wallet -= price;
     ownedSkins.push(color);
     currentSkin = color;
-
+    
     updateUI();
     updateShopUI();
-
-    get("buySound").play();
-
-    saveProfile();
-}
-
-/* =========================
-   🎮 GAME
-========================= */
-
-function updateUI(){
-    get("score").innerText = score;
-    get("time").innerText = time;
-    get("walletAmount").innerText = wallet;
-    get("combo").innerText = "x" + multiplier;
-}
-
-function resetCombo(){
-    multiplier = 1;
-    updateUI();
-}
-
-function startGame(){
-    score = 0;
-    time = 15;
-    multiplier = 1;
-    spawnSpeed = 800;
-
-    goTo("gameScreen");
-
-    updateUI();
-
-    gameTimer = setInterval(()=>{
-        time--;
-        updateUI();
-        if(time <= 0) endGame();
-    },1000);
-
-    spawnTimer = setInterval(spawnLoop, spawnSpeed);
-}
-
-/* 💀 LOOP */
-function spawnLoop(){
-    spawnSkull();
-
-    if(spawnSpeed > 300){
-        spawnSpeed -= 10;
-        clearInterval(spawnTimer);
-        spawnTimer = setInterval(spawnLoop, spawnSpeed);
-    }
-}
-
-/* 💀 SPAWN */
-function spawnSkull(){
-
-    const isFake = Math.random() < 0.25; // 25% enemigos
-
-    const skull = document.createElement("div");
-    skull.className = "target";
-
-    if(isFake){
-        skull.innerHTML = "☠️"; // enemigo
-        skull.style.filter = "drop-shadow(0 0 10px red)";
-    } else {
-        skull.innerHTML = "💀";
-        skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
-    }
-
-    skull.style.left = Math.random()*80+5+"%";
-    skull.style.top = Math.random()*80+5+"%";
-
-    skull.onclick = ()=>{
-
-        if(isFake){
-            // ❌ castigo
-            score -= 20;
-            multiplier = 1;
-
-            const area = get("gameArea");
-            area.classList.add("shake");
-            setTimeout(()=>area.classList.remove("shake"),300);
-
-        } else {
-            // ✅ normal
-            score += 10 * multiplier;
-            wallet += 1;
-            multiplier++;
-
-            clearTimeout(comboTimer);
-            comboTimer = setTimeout(resetCombo, 1200);
-        }
-
-        updateUI();
-
-        get("hitSound").currentTime = 0;
-        get("hitSound").play();
-
-        skull.remove();
-    };
-
-    get("gameArea").appendChild(skull);
-    setTimeout(()=>skull.remove(),1200);
-}
-
-function endGame(){
-    clearInterval(gameTimer);
-    clearInterval(spawnTimer);
-
-    get("gameArea").innerHTML = "";
-    get("finalScore").innerText = score + " pts";
-
-    goTo("gameOverScreen");
-
-    saveProfile();
+    
+    if(get("buySound")) get("buySound").play();
+    
+    // Guardamos inmediatamente la compra en Supabase
     saveScore();
 }
 
-/* =========================
-   🧭 NAV
-========================= */
+function updateShopUI() {
+    const buttons = document.querySelectorAll(".shop-grid button");
+    buttons.forEach(btn => {
+        const onclick = btn.getAttribute("onclick");
+        if(!onclick) return;
 
-function goTo(id){
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    get(id).classList.add("active");
+        const colorMatch = onclick.match(/'(.*?)'/);
+        if(!colorMatch) return;
+        const color = colorMatch[1];
+
+        if(!btn.dataset.originalName) {
+            btn.dataset.originalName = btn.innerText.split('(')[0].trim();
+        }
+
+        if(currentSkin === color) {
+            btn.innerText = `${btn.dataset.originalName} (EQUIPADO)`;
+            btn.style.borderColor = "var(--neon-cyan)";
+        } else if(ownedSkins.includes(color)) {
+            btn.innerText = `${btn.dataset.originalName} (USAR)`;
+            btn.style.borderColor = "white";
+        } else {
+            const priceMatch = onclick.match(/,\s*(\d+)/);
+            const price = priceMatch ? priceMatch[1] : "0";
+            btn.innerText = `${btn.dataset.originalName} (${price})`;
+            btn.style.borderColor = "var(--neon-green)";
+        }
+    });
 }
 
-function goHome(){
-    goTo("startScreen");
+async function showRanking() {
+    const { data, error } = await client
+        .from('scores')
+        .select('*')
+        .order('score', { ascending: false })
+        .limit(10);
+
+    if (error) return;
+
+    const list = get("rankingList");
+    if (list) {
+        list.innerHTML = data.length === 0 ? "<li>No hay puntajes aún</li>" : 
+            data.map((item, i) => `<li>${i + 1}. ${item.name}: ${item.score} pts</li>`).join("");
+    }
+    switchScreen('ranking');
 }
 
-/* INIT */
-window.addEventListener("load", ()=>{
+function updateUI() {
+    if(get("score")) get("score").innerText = score;
+    if(get("time")) get("time").innerText = time;
+    if(get("walletAmount")) get("walletAmount").innerText = wallet;
+}
+
+function checkDifficulty() {
+    const level = Math.floor(score / difficultyThreshold) + 1;
+    if (level > currentLevel) {
+        currentLevel = level;
+        spawnRate = Math.max(300, spawnRate * 0.85);
+        skullLifetime = Math.max(500, skullLifetime * 0.90);
+        clearInterval(spawnTimer);
+        spawnTimer = setInterval(spawnSkull, spawnRate);
+    }
+}
+
+function createHitEffects(x, y) {
+    const explosion = document.createElement("div");
+    explosion.className = "explosion-fx";
+    explosion.style.left = x + "px";
+    explosion.style.top = y + "px";
+    
+    if(currentSkin === "rainbow") {
+        const colors = ["#ff0000", "#ffff00", "#00ff00", "#00ffff", "#ff00ff"];
+        explosion.style.background = colors[Math.floor(Math.random() * colors.length)];
+    } else {
+        explosion.style.background = currentSkin;
+    }
+    
+    get("gameArea").appendChild(explosion);
+    setTimeout(() => explosion.remove(), 400);
+    
+    const splatter = document.createElement("div");
+    splatter.className = "skull-splatter";
+    splatter.innerHTML = "💀";
+    splatter.style.left = x + "px";
+    splatter.style.top = y + "px";
+    
+    get("gameArea").appendChild(splatter);
+    setTimeout(() => splatter.remove(), 700);
+}
+
+function startGame() {
+    score = 0; time = 15;
+    currentLevel = 1; spawnRate = 800; skullLifetime = 1200;
+    switchScreen('game');
+    updateUI();
+    gameTimer = setInterval(() => {
+        time--;
+        updateUI();
+        if (time <= 0) endGame();
+    }, 1000);
+    spawnTimer = setInterval(spawnSkull, spawnRate);
+}
+
+function spawnSkull() {
+    const skull = document.createElement("div");
+    skull.className = "target";
+    skull.innerHTML = "💀";
+    skull.style.left = Math.random() * 80 + 5 + "%";
+    skull.style.top = Math.random() * 80 + 5 + "%";
+    
+    if(currentSkin === "rainbow") {
+        skull.style.animation = "rainbowGlow 1s infinite";
+    } else {
+        skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
+    }
+
+    skull.onclick = (e) => {
+        score += 10;
+        wallet += 1;
+        updateUI();
+        createHitEffects(e.clientX, e.clientY);
+        checkDifficulty();
+        if(get("hitSound")) { get("hitSound").currentTime = 0; get("hitSound").play(); }
+        skull.remove();
+    };
+    get("gameArea").appendChild(skull);
+    setTimeout(() => { if(skull.parentElement) skull.remove(); }, skullLifetime);
+}
+
+function endGame() {
+    clearInterval(gameTimer); clearInterval(spawnTimer);
+    get("gameArea").innerHTML = "";
+    get("finalScore").innerText = score + " pts";
+    switchScreen('gameOver');
+    saveScore(); // Guardamos puntos y wallet al terminar
+}
+
+function goHome() { switchScreen('start'); }
+
+window.onload = () => {
     updateShopUI();
-});
+    if(get("playBtn")) get("playBtn").onclick = startGame;
+    if(get("restartBtn")) get("restartBtn").onclick = startGame;
+    if(get("rankingBtn")) get("rankingBtn").onclick = showRanking;
+    
+    if(get("loginBtn")) {
+        get("loginBtn").onclick = async () => {
+            const email = get("email").value;
+            const password = get("password").value;
+            const { data, error } = await client.auth.signInWithPassword({ email, password });
+            if (data.user) {
+                currentUser = data.user;
+                get("userStatus").innerText = "Conectado: " + email.split('@')[0];
+                loadUserData(); // Cargamos skins y wallet al entrar
+            } else {
+                alert("Error: " + error.message);
+            }
+        };
+    }
+
+    if(get("registerBtn")) {
+        get("registerBtn").onclick = async () => {
+            const email = get("email").value;
+            const password = get("password").value;
+            const { data, error } = await client.auth.signUp({ email, password });
+            if (error) alert(error.message);
+            else alert("¡Revisa tu email para confirmar!");
+        };
+    }
+};
