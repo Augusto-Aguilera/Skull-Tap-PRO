@@ -41,15 +41,20 @@ body, html {
 .hp-bg { background: #333; height: 12px; border-radius: 6px; overflow: hidden; }
 .hp-fill { background: linear-gradient(90deg, #ff0000, #ff6600); width: 100%; height: 100%; transition: 0.2s; }
 
-/* XP BAR - MEJORA */
+/* XP BAR */
 .xp-container { width: 80%; max-width: 400px; height: 10px; background: #222; border-radius: 5px; margin-bottom: 10px; position: relative; border: 1px solid #444; overflow: hidden; }
 .xp-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); transition: width 0.3s ease; }
 #xpText { position: absolute; width: 100%; text-align: center; font-size: 0.6rem; top: 0; line-height: 10px; color: white; font-weight: bold; text-shadow: 1px 1px 2px black; }
 
-/* MULTIPLIERS DISPLAY - MEJORA */
+/* MULTIPLIERS DISPLAY */
 .multipliers-display { position: absolute; top: 110px; left: 20px; display: flex; flex-direction: column; gap: 5px; z-index: 100; }
 .badge-multiplier { background: rgba(0,0,0,0.8); border: 1px solid var(--neon-yellow); color: var(--neon-yellow); padding: 5px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; animation: badgeIn 0.3s ease-out; text-shadow: 0 0 5px var(--neon-yellow); }
 @keyframes badgeIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+/* LEVEL UP EFFECTS */
+.level-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 9999; }
+@keyframes flashAnim { 0% { opacity: 0.8; } 100% { opacity: 0; } }
+.level-up-particle { position: absolute; pointer-events: none; z-index: 1000; border-radius: 50%; box-shadow: 0 0 10px white; }
 
 /* POWER UPS */
 .power-up { font-size: 40px; position: absolute; cursor: pointer; filter: drop-shadow(0 0 10px white); z-index: 50; }
