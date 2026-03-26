@@ -1,5 +1,5 @@
 /* =========================
-   💀 SKULL TAP PRO !
+   💀 SKULL TAP PRO - REPARADO Y MEJORADO POR PATRIC
 ========================= */
 
 const client = window.supabase.createClient(
@@ -14,13 +14,13 @@ let currentSkin = "var(--neon-magenta)";
 let ownedSkins = ["var(--neon-magenta)"];
 let gameTimer, spawnTimer;
 
-// --- 📈 VARIABLES DE DIFICULTAD Y COMBO (Mejora 2) ---
+// --- 📈 VARIABLES DE DIFICULTAD Y COMBO ---
 let currentLevel = 1;
 let spawnRate = 800;
 let combo = 1;
 const difficultyThreshold = 500;
 
-// --- 1. REPARACIÓN DE NOMBRES EN TIENDA (Punto 3 - Reparado) ---
+// --- 1. REPARACIÓN DE NOMBRES EN TIENDA ---
 function updateShopUI() {
     const buttons = document.querySelectorAll(".shop-grid button");
     buttons.forEach(btn => {
@@ -50,7 +50,7 @@ function updateShopUI() {
     });
 }
 
-// --- 2. REPARACIÓN DE RANKING (Punto 3 - Reparado) ---
+// --- 2. REPARACIÓN DE RANKING ---
 async function showRanking() {
     const { data, error } = await client
         .from('scores')
@@ -79,7 +79,7 @@ function updateUI() {
     if(get("combo")) get("combo").innerText = "x" + combo;
 }
 
-// --- 🛒 TIENDA (Punto 3 - Reparado) ---
+// --- 🛒 TIENDA ---
 async function buySkin(color, price) {
     if(ownedSkins.includes(color)) {
         currentSkin = color;
@@ -98,27 +98,24 @@ async function buySkin(color, price) {
     if(get("buySound")) get("buySound").play();
 }
 
-// --- 📈 LÓGICA DE DIFICULTAD Y COMBO (Mejora 2) ---
+// --- 📈 LÓGICA DE DIFICULTAD Y COMBO ---
 function checkDifficulty() {
-    // Calculamos el nivel en base al puntaje
     const level = Math.floor(score / difficultyThreshold) + 1;
-    
-    // Si subimos de nivel, aumentamos la dificultad
     if (level > currentLevel) {
         currentLevel = level;
-        
-        // Aumentamos el Spawn Rate (sale más rápido) un 15%
-        spawnRate = Math.max(300, spawnRate * 0.85); // Mínimo 300ms
-        
-        // Reiniciamos el spawn timer con la nueva velocidad
+        spawnRate = Math.max(300, spawnRate * 0.85);
         clearInterval(spawnTimer);
         spawnTimer = setInterval(spawnSkull, spawnRate);
     }
 }
 
-// --- ✨ LÓGICA DE DESINTEGRACIÓN EN PARTÍCULAS (Mejora 1) ---
-function createDissintegration(x, y, color) {
-    const numParticles = 12; // Cuántas partículas salen
+// --- ✨ LÓGICA DE DESINTEGRACIÓN EN PARTÍCULAS ---
+function createDissintegration(x, y, skinColor) {
+    const numParticles = 12;
+    // Resolvemos el color de la piel si es una variable CSS
+    const resolvedColor = skinColor.startsWith('var(') ? 
+        getComputedStyle(document.documentElement).getPropertyValue(skinColor.match(/\((.*?)\)/)[1]).trim() : 
+        skinColor;
     
     for (let i = 0; i < numParticles; i++) {
         const particle = document.createElement("div");
@@ -126,40 +123,34 @@ function createDissintegration(x, y, color) {
         particle.style.left = x + "px";
         particle.style.top = y + "px";
         
-        // El color depende de la skin actual
         let pColor;
-        if(color === "rainbow") {
+        if(skinColor === "rainbow") {
             const colors = ["#ff0000", "#ffff00", "#00ff00", "#00ffff", "#ff00ff"];
             pColor = colors[Math.floor(Math.random() * colors.length)];
         } else {
-            pColor = color;
+            pColor = resolvedColor;
         }
         
         particle.style.background = pColor;
         particle.style.boxShadow = `0 0 8px ${pColor}`;
         
-        // Calculamos dirección aleatoria para cada partícula
-        const angle = Math.random() * Math.PI * 2; // Ángulo aleatorio (0 a 360 grados)
-        const radius = 60 + Math.random() * 40; // Distancia a volar
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 60 + Math.random() * 40;
         const xDist = Math.cos(angle) * radius;
         const yDist = Math.sin(angle) * radius;
         
-        // Asignamos las variables CSS para la animación
         particle.style.setProperty('--x', xDist + "px");
         particle.style.setProperty('--y', yDist + "px");
         
         get("gameArea").appendChild(particle);
-        setTimeout(() => particle.remove(), 800); // Mismo tiempo que la animación CSS
+        setTimeout(() => particle.remove(), 800);
     }
 }
 
-// --- 🎮 LÓGICA DEL JUEGO (RESTAURADA Y MEJORADA) ---
+// --- 🎮 LÓGICA DEL JUEGO ---
 function startGame() {
     score = 0; time = 15; combo = 1; spawnRate = 800;
-    
-    // Reiniciamos dificultad (Mejora 2)
     currentLevel = 1;
-    
     switchScreen('game');
     updateUI();
     gameTimer = setInterval(() => {
@@ -177,38 +168,39 @@ function spawnSkull() {
     skull.style.left = Math.random() * 80 + 5 + "%";
     skull.style.top = Math.random() * 80 + 5 + "%";
     
-    // Mantenemos tu efecto de skin (Punto 1 - Mantenido y Mejorado para color interior)
+    // MEJORA: Color Neón Aleatorio (Punto 1 - Reparado)
     if(currentSkin === "rainbow") {
         skull.style.animation = "rainbowGlow 1s infinite";
     } else {
-        // AHORA SÍ: El emoji se pinta del color de la skin (gracias a 'color')
-        // y mantiene el brillo (gracias a 'drop-shadow')
-        skull.style.color = currentSkin;
-        skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
+        // Resolvemos el color de la piel si es una variable CSS
+        const skinColor = currentSkin.startsWith('var(') ? 
+            getComputedStyle(document.documentElement).getPropertyValue(currentSkin.match(/\((.*?)\)/)[1]).trim() : 
+            currentSkin;
+        
+        // --- EL TRUCO MÁGICO DE CSS (Ahora sí pinta por dentro) ---
+        skull.style.background = skinColor;
+        skull.style.webkitBackgroundClip = "text";
+        skull.style.webkitTextFillColor = "transparent";
+        skull.style.filter = `drop-shadow(0 0 10px ${skinColor})`;
     }
 
-    skull.onclick = (e) => { // Agregamos 'e' para obtener las coordenadas del clic
-        // MEJORA: Multiplicador Progresivo
+    skull.onclick = (e) => {
         score += (10 * combo);
         wallet += 1;
         combo++;
-        
         updateUI();
         
-        // Lanzamos desintegración (Mejora 1)
+        // Lanzamos desintegración (Mejora 2 - Reparado)
         createDissintegration(e.clientX, e.clientY, currentSkin);
         
-        // Verificamos si subimos dificultad (Mejora 2)
         checkDifficulty();
-        
         if(get("hitSound")) { get("hitSound").currentTime = 0; get("hitSound").play(); }
         skull.remove();
     };
     get("gameArea").appendChild(skull);
     
-    // Si la calavera desaparece sola (no la tocaste), el combo se reinicia a 1
-    setTimeout(() => { 
-        if(skull.parentElement) {
+    // El tiempo de vida ahora es dinámico
+    setTimeout(() => { if(skull.parentElement) {
             skull.remove(); 
             combo = 1; // Pierdes el combo si no la tocas
             updateUI();
@@ -242,7 +234,6 @@ window.onload = () => {
     if(get("restartBtn")) get("restartBtn").onclick = startGame;
     if(get("rankingBtn")) get("rankingBtn").onclick = showRanking;
     
-    // Auth Logic
     if(get("loginBtn")) {
         get("loginBtn").onclick = async () => {
             const email = get("email").value;
