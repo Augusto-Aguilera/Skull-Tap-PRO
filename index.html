@@ -60,7 +60,6 @@
 <div id="shopScreen" class="screen">
     <h2>🛒 TIENDA</h2>
     <p>Billetera: <span id="walletAmount">0</span> pts</p>
-
     <div class="shop-grid">
         <button onclick="buySkin('var(--neon-magenta)', 0)">MAGENTA</button>
         <button onclick="buySkin('#00fbff', 500)">CYAN</button>
@@ -71,7 +70,6 @@
         <button onclick="buySkin('#ffd700', 8000)">BAPHOMET</button>
         <button onclick="buySkin('rainbow', 12000)">ORULA</button>
     </div>
-
     <button onclick="goHome()" class="btn-outline">VOLVER</button>
 </div>
 
@@ -83,8 +81,7 @@
 
 <div id="achievementsScreen" class="screen">
     <h2>🏅 MIS LOGROS</h2>
-    <div id="achievementsList" class="achievements-container">
-        </div>
+    <div id="achievementsList" class="achievements-container"></div>
     <button onclick="goHome()" class="btn-outline">VOLVER</button>
 </div>
 
@@ -92,9 +89,9 @@
 <audio id="buySound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
 
 <script>
-    function switchScreen(screenId){
+    function switchScreen(id){
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId + "Screen").classList.add("active");
+        document.getElementById(id + "Screen").classList.add("active");
     }
 </script>
 <script src="script.js"></script>
