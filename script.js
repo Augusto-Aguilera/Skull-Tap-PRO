@@ -11,6 +11,7 @@ let currentSkin = "var(--neon-magenta)";
 let ownedSkins = ["var(--neon-magenta)"];
 let unlockedAchievements = [];
 let gameTimer, spawnTimer, puTimer;
+let highVisualScore = 0; // Para comparar récords localmente en la sesión
 
 let upgrades = { magnet: 0, time: 0, luck: 0 };
 const UPGRADE_DATA = {
@@ -22,7 +23,7 @@ const UPGRADE_DATA = {
 let streakCount = 0, lastLoginDate = null;
 let bossActive = false, bossHP = 100, doublePoints = false;
 let combo = 1, comboHits = 0, lastHitTime = 0;
-let xpAtStartOfRound = 0; // Para calcular XP ganada al final
+let xpAtStartOfRound = 0;
 
 const PLAYLIST = [
     "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
@@ -86,6 +87,7 @@ async function loadUserData() {
     if (data) {
         wallet = data.wallet || 0; xp = data.xp || 0; level = data.level || 1;
         streakCount = data.streak || 0; lastLoginDate = data.last_login;
+        highVisualScore = data.score || 0; // Cargamos el récord desde la DB
         if (data.skins) ownedSkins = data.skins.split(',');
         if (data.achievements) unlockedAchievements = data.achievements.split(',');
         if (data.upgrades) upgrades = JSON.parse(data.upgrades);
@@ -123,15 +125,11 @@ async function saveProgress() {
 
 function startGame() {
     updateMusic();
-    xpAtStartOfRound = xp; // Guardamos XP inicial para comparar al final
+    xpAtStartOfRound = xp;
     score = 0; time = 15; combo = 1; comboHits = 0; bossActive = false; doublePoints = false;
     get("bossHealthBar").style.display = "none";
     switchScreen('game'); updateUI();
-    gameTimer = setInterval(() => { 
-        time--; 
-        updateUI(); 
-        if (time <= 0) endGame(); 
-    }, 1000);
+    gameTimer = setInterval(() => { time--; updateUI(); if (time <= 0) endGame(); }, 1000);
     spawnTimer = setInterval(spawnSkull, 800);
     puTimer = setInterval(spawnPowerUp, 7000); 
 }
@@ -198,26 +196,21 @@ function spawnBoss() {
 function spawnSkull() {
     if (bossActive) return;
     if (level % 5 === 0 && !bossActive && score > 0) { spawnBoss(); return; }
-
     const area = get("gameArea");
     const skull = document.createElement("div");
     const luckChance = 0.05 + (upgrades.luck * 0.05);
     const isGold = Math.random() < luckChance;
     const isDistraction = !isGold && Math.random() < 0.15;
-
     skull.className = "target" + (isDistraction ? " distraction" : (isGold ? " gold" : ""));
     skull.innerHTML = isGold ? "💰" : (isDistraction ? "😡" : "💀");
-    
     const baseSize = isDistraction ? 50 : 70;
     const newSize = baseSize + (upgrades.magnet * 8);
     skull.style.width = newSize + "px"; skull.style.height = newSize + "px";
     skull.style.fontSize = (newSize * 0.8) + "px";
-
     if (!isDistraction && !isGold) {
         if(currentSkin === "rainbow") skull.style.animation = "rainbowGlow 1s infinite";
         else skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
     }
-
     skull.onclick = (e) => {
         if (isDistraction) {
             score = Math.max(0, score - 200); xp = Math.max(0, xp - 50);
@@ -228,27 +221,20 @@ function spawnSkull() {
             if (now - lastHitTime < 1000) { comboHits++; if (comboHits % 5 === 0) combo++; }
             else { combo = 1; comboHits = 0; }
             lastHitTime = now;
-            
             let pts = (isGold ? 100 : 10) * combo;
             if (doublePoints) pts *= 2; 
             score += pts; wallet += (isGold ? 5 : 1); addXP(isGold ? 100 : 25);
-            
             if(upgrades.time > 0) time += (upgrades.time * 0.1);
-
             if(isGold) {
                 if(get("goldHitSound")) { get("goldHitSound").currentTime = 0; get("goldHitSound").play(); }
                 createFloatingText(e.clientX, e.clientY, `+${pts}`);
                 createGoldExplosion(e.clientX, e.clientY);
-            } else {
-                if(get("hitSound")) { get("hitSound").currentTime = 0; get("hitSound").play(); }
-            }
-
+            } else { if(get("hitSound")) { get("hitSound").currentTime = 0; get("hitSound").play(); } }
             updateMissions(1, combo, pts); updateWeeklyChallenges(pts, 0);
             checkAchievements(); createHitEffects(e.clientX, e.clientY); screenVibrate();
         }
         updateUI(); updateMultipliersDisplay(); skull.remove();
     };
-
     skull.style.left = Math.random() * 80 + 5 + "%";
     skull.style.top = Math.random() * 80 + 5 + "%";
     area.appendChild(skull);
@@ -268,7 +254,6 @@ function createGoldExplosion(x, y) {
         const p = document.createElement("div"); p.className = "particle";
         p.style.width = p.style.height = "8px"; p.style.background = "gold";
         p.style.left = (x - rect.left) + "px"; p.style.top = (y - rect.top) + "px";
-        p.style.boxShadow = "0 0 10px white";
         const angle = Math.random() * Math.PI * 2, dist = Math.random() * 150 + 50;
         area.appendChild(p);
         p.animate([{ transform: 'translate(0,0) rotate(0deg)', opacity: 1 }, { transform: `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) rotate(360deg)`, opacity: 0 }], { duration: 800 }).onfinish = () => p.remove();
@@ -282,7 +267,7 @@ function createHitEffects(x, y) {
     const colors = ["#00fbff", "#ff00ff", "#00ffcc", "#fff000"];
     const area = get("gameArea"); const rect = area.getBoundingClientRect();
     for (let i = 0; i < 8; i++) {
-        const p = document.createElement("div"); p.className = "particle"; p.style.width = "5px"; p.style.height = "5px";
+        const p = document.createElement("div"); p.className = "particle";
         p.style.left = (x - rect.left) + "px"; p.style.top = (y - rect.top) + "px";
         p.style.background = colors[Math.floor(Math.random() * colors.length)];
         const angle = Math.random() * Math.PI * 2, velocity = Math.random() * 100 + 50;
@@ -327,19 +312,49 @@ function checkAchievements() {
 
 function showAchievementToast(msg) { const t = document.createElement("div"); t.className = "achievement-toast"; t.innerHTML = `🏆 ${msg}`; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
 
-// --- CORRECCIÓN EN ENDGAME ---
+// --- FUNCIÓN ENDGAME REPARADA Y MEJORADA ---
 function endGame() { 
     clearInterval(gameTimer); 
     clearInterval(spawnTimer); 
     clearInterval(puTimer); 
     
-    // Mostramos los puntos reales en la pantalla final antes de cambiar
-    get("finalScore").innerText = score.toLocaleString() + " PTS";
+    // Captura inmediata de puntos
+    const finalScoreValue = score;
+    const finalScoreDisplay = get("finalScore");
+    const xpDisplay = get("xpGainedDisplay");
     
+    // Mostramos puntos finales
+    if(finalScoreDisplay) {
+        finalScoreDisplay.innerText = finalScoreValue.toLocaleString() + " pts";
+    }
+    
+    // Lógica de Nuevo Récord
+    if(finalScoreValue > highVisualScore && finalScoreValue > 0) {
+        highVisualScore = finalScoreValue;
+        const recordMsg = document.createElement("div");
+        recordMsg.id = "newRecordMsg";
+        recordMsg.style.color = "var(--neon-cyan)";
+        recordMsg.style.textShadow = "0 0 10px var(--neon-cyan)";
+        recordMsg.style.fontWeight = "bold";
+        recordMsg.style.fontSize = "1.5rem";
+        recordMsg.style.margin = "10px 0";
+        recordMsg.innerText = "¡NUEVO RÉCORD PERSONAL!";
+        
+        // Insertar el mensaje arriba de los puntos
+        if(finalScoreDisplay.parentElement) {
+            const existing = get("newRecordMsg");
+            if(existing) existing.remove();
+            finalScoreDisplay.parentElement.insertBefore(recordMsg, finalScoreDisplay);
+        }
+    } else {
+        const existing = get("newRecordMsg");
+        if(existing) existing.remove();
+    }
+
     // Calculamos XP ganada
     let xpGained = Math.floor(xp - xpAtStartOfRound);
-    if(xpGained < 0) xpGained = 0; // Por si bajó por distracciones
-    get("xpGainedDisplay").innerText = `+${xpGained} XP acumulada`;
+    if(xpGained < 0) xpGained = 0;
+    if(xpDisplay) xpDisplay.innerText = `+${xpGained} XP ganada en esta ronda`;
 
     get("gameArea").innerHTML = ""; 
     switchScreen('gameOver'); 
