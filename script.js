@@ -1,5 +1,5 @@
 /* =========================
-   💀 SKULL TAP PRO - REPARADO Y MEJORADO POR PATRIC
+   💀 SKULL TAP PRO
 ========================= */
 
 const client = window.supabase.createClient(
@@ -20,7 +20,7 @@ let spawnRate = 800;
 let combo = 1;
 const difficultyThreshold = 500;
 
-// --- 1. REPARACIÓN DE NOMBRES EN TIENDA ---
+// --- NOMBRES EN TIENDA ---
 function updateShopUI() {
     const buttons = document.querySelectorAll(".shop-grid button");
     buttons.forEach(btn => {
@@ -50,7 +50,7 @@ function updateShopUI() {
     });
 }
 
-// --- 2. REPARACIÓN DE RANKING ---
+// --- RANKING ---
 async function showRanking() {
     const { data, error } = await client
         .from('scores')
