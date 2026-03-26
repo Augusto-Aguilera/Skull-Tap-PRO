@@ -1,7 +1,6 @@
 /* =========================
-   💀 SKULL TAP PRO - MEGA UPDATE
-   Niveles + Logros + Ranking Global
-========================= */
+   💀 SKULL TAP PRO - CORE JS
+   ========================= */
 
 const client = window.supabase.createClient(
     "https://thkuxitmdfwthyadcytx.supabase.co",
@@ -11,24 +10,37 @@ const client = window.supabase.createClient(
 const get = (id) => document.getElementById(id);
 let currentUser = null;
 
-// Variables de Progreso
-let score = 0, time = 15, wallet = 0;
-let xp = 0, level = 1;
+// Variables de Estado
+let score = 0, time = 15, wallet = 0, xp = 0, level = 1;
 let currentSkin = "var(--neon-magenta)";
 let ownedSkins = ["var(--neon-magenta)"];
 let unlockedAchievements = [];
+let gameTimer, spawnTimer;
 
-// Configuración de Niveles (Cada nivel pide 500 XP más que el anterior)
-const getXPForNextLevel = (lvl) => lvl * 500;
+// Dificultad Dinámica
+let spawnRate = 800;
+let skullLifetime = 1200;
+const difficultyThreshold = 500;
 
-// --- 🔄 CARGA DE DATOS EXTENDIDA ---
+// Configuración de Logros
+const ACHIEVEMENTS_LIST = {
+    "FIRST_BLOOD": { name: "Primera Sangre", desc: "Aplasta 1 calavera", req: () => score >= 10 },
+    "SHARP_SHOOTER": { name: "Francotirador", desc: "Llega a 500 pts en una partida", req: () => score >= 500 },
+    "COLLECTOR": { name: "Coleccionista", desc: "Ten 3 skins en tu armario", req: () => ownedSkins.length >= 3 },
+    "VETERAN": { name: "Veterano", desc: "Llega al Nivel 5", req: () => level >= 5 },
+    "MILLIONAIRE": { name: "Capitalista", desc: "Llega a 1000 pts en la billetera", req: () => wallet >= 1000 }
+};
+
+// --- 🔄 SINCRONIZACIÓN CON SUPABASE ---
+
 async function loadUserData() {
     if (!currentUser) return;
+    const userName = currentUser.email.split('@')[0];
     
-    const { data } = await client
+    const { data, error } = await client
         .from('scores')
         .select('*')
-        .eq('name', currentUser.email.split('@')[0])
+        .eq('name', userName)
         .single();
 
     if (data) {
@@ -40,57 +52,17 @@ async function loadUserData() {
         
         updateUI();
         updateShopUI();
-        console.log("Perfil cargado: Nivel", level);
+        console.log("Datos cargados para:", userName);
     }
 }
 
-// --- 🏆 SISTEMA DE LOGROS (Tipo Steam) ---
-const ACHIEVEMENTS_LIST = {
-    "FIRST_BLOOD": { name: "Primera Sangre", desc: "Aplasta tu primera calavera", req: () => score >= 10 },
-    "FAST_FINGERS": { name: "Dedos de Fuego", desc: "Llega a 500 puntos en una partida", req: () => score >= 500 },
-    "COLLECTOR": { name: "Coleccionista", desc: "Ten más de 3 skins", req: () => ownedSkins.length >= 3 },
-    "RICHLI": { name: "Millonario", desc: "Llega a 1000 en la wallet", req: () => wallet >= 1000 }
-};
-
-function checkAchievements() {
-    Object.keys(ACHIEVEMENTS_LIST).forEach(key => {
-        if (!unlockedAchievements.includes(key) && ACHIEVEMENTS_LIST[key].req()) {
-            unlockedAchievements.push(key);
-            showAchievementToast(ACHIEVEMENTS_LIST[key].name);
-        }
-    });
-}
-
-function showAchievementToast(name) {
-    const toast = document.createElement("div");
-    toast.className = "achievement-toast";
-    toast.innerHTML = `🏆 <b>Logro Desbloqueado:</b> <br> ${name}`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-
-// --- 📈 SISTEMA DE XP Y NIVELES ---
-function addXP(amount) {
-    xp += amount;
-    let nextXP = getXPForNextLevel(level);
-    
-    if (xp >= nextXP) {
-        level++;
-        showLevelUpEffect();
-    }
-}
-
-function showLevelUpEffect() {
-    alert(`✨ ¡SUBISTE AL NIVEL ${level}! ✨`);
-}
-
-// --- 💾 GUARDADO GLOBAL ---
 async function saveProgress() {
     if (!currentUser) return;
     const userName = currentUser.email.split('@')[0];
 
-    const { data: record } = await client.from('scores').select('score').eq('name', userName).single();
-    const topScore = record ? Math.max(record.score, score) : score;
+    // No sobreescribir el record histórico si el puntaje actual es menor
+    const { data: currentRecord } = await client.from('scores').select('score').eq('name', userName).single();
+    const topScore = currentRecord ? Math.max(currentRecord.score, score) : score;
 
     await client.from('scores').upsert([{ 
         name: userName, 
@@ -103,37 +75,217 @@ async function saveProgress() {
     }], { onConflict: 'name' });
 }
 
-// --- 🎮 MOTOR DEL JUEGO MODIFICADO ---
+// --- 🎮 MOTOR DEL JUEGO ---
+
+function startGame() {
+    score = 0; time = 15;
+    spawnRate = 800; skullLifetime = 1200;
+    switchScreen('game');
+    updateUI();
+    
+    gameTimer = setInterval(() => {
+        time--;
+        updateUI();
+        if (time <= 0) endGame();
+    }, 1000);
+    
+    spawnTimer = setInterval(spawnSkull, spawnRate);
+}
+
 function spawnSkull() {
+    const gameArea = get("gameArea");
+    if(!gameArea) return;
+
     const skull = document.createElement("div");
     skull.className = "target";
     skull.innerHTML = "💀";
     skull.style.left = Math.random() * 80 + 5 + "%";
     skull.style.top = Math.random() * 80 + 5 + "%";
-    skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
+    
+    // Aplicar Skin
+    if(currentSkin === "rainbow") {
+        skull.style.animation = "rainbowGlow 1s infinite";
+    } else {
+        skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
+    }
 
     skull.onclick = (e) => {
         score += 10;
         wallet += 1;
-        addXP(20); // 20 XP por calavera
-        checkAchievements(); // Validar si ganó un logro
+        addXP(20); // 20 de XP por cada calavera
+        checkAchievements();
         updateUI();
         createHitEffects(e.clientX, e.clientY);
+        
+        // Dificultad Progresiva
+        if (score % difficultyThreshold === 0) {
+            spawnRate = Math.max(300, spawnRate * 0.9);
+            clearInterval(spawnTimer);
+            spawnTimer = setInterval(spawnSkull, spawnRate);
+        }
+
+        if(get("hitSound")) { get("hitSound").currentTime = 0; get("hitSound").play(); }
         skull.remove();
     };
-    get("gameArea").appendChild(skull);
-    setTimeout(() => { if(skull.parentElement) skull.remove(); }, 1200);
+    
+    gameArea.appendChild(skull);
+    setTimeout(() => { if(skull.parentElement) skull.remove(); }, skullLifetime);
+}
+
+function addXP(amount) {
+    xp += amount;
+    let nextLevelXP = level * 500;
+    if (xp >= nextLevelXP) {
+        level++;
+        alert(`¡HAS SUBIDO AL NIVEL ${level}! 💀🔥`);
+        saveProgress();
+    }
+}
+
+function checkAchievements() {
+    Object.keys(ACHIEVEMENTS_LIST).forEach(key => {
+        if (!unlockedAchievements.includes(key) && ACHIEVEMENTS_LIST[key].req()) {
+            unlockedAchievements.push(key);
+            showAchievementToast(ACHIEVEMENTS_LIST[key].name);
+            saveProgress();
+        }
+    });
+}
+
+function showAchievementToast(name) {
+    const toast = document.createElement("div");
+    toast.className = "achievement-toast";
+    toast.innerHTML = `🏆 <b>Logro Desbloqueado:</b> <br> ${name}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+function createHitEffects(x, y) {
+    const explosion = document.createElement("div");
+    explosion.className = "explosion-fx";
+    explosion.style.left = x + "px"; explosion.style.top = y + "px";
+    explosion.style.background = (currentSkin === "rainbow") ? "white" : currentSkin;
+    get("gameArea").appendChild(explosion);
+    setTimeout(() => explosion.remove(), 400);
+
+    const splatter = document.createElement("div");
+    splatter.className = "skull-splatter";
+    splatter.innerHTML = "💀";
+    splatter.style.left = x + "px"; splatter.style.top = y + "px";
+    get("gameArea").appendChild(splatter);
+    setTimeout(() => splatter.remove(), 700);
+}
+
+function endGame() {
+    clearInterval(gameTimer);
+    clearInterval(spawnTimer);
+    get("gameArea").innerHTML = "";
+    get("finalScore").innerText = score + " pts";
+    switchScreen('gameOver');
+    saveProgress();
+}
+
+// --- 🛒 TIENDA Y RANKING ---
+
+function buySkin(color, price) {
+    if(ownedSkins.includes(color)) {
+        currentSkin = color;
+        updateShopUI();
+        return;
+    }
+    if(wallet < price) {
+        alert("¡Necesitas más puntos! 💀");
+        return;
+    }
+    wallet -= price;
+    ownedSkins.push(color);
+    currentSkin = color;
+    updateUI();
+    updateShopUI();
+    if(get("buySound")) get("buySound").play();
+    saveProgress();
+}
+
+function updateShopUI() {
+    const buttons = document.querySelectorAll(".shop-grid button");
+    buttons.forEach(btn => {
+        const onclickAttr = btn.getAttribute("onclick");
+        const colorMatch = onclickAttr.match(/'(.*?)'/);
+        if(!colorMatch) return;
+        const color = colorMatch[1];
+
+        if(currentSkin === color) {
+            btn.style.borderColor = "var(--neon-cyan)";
+            btn.style.boxShadow = "0 0 10px var(--neon-cyan)";
+        } else if(ownedSkins.includes(color)) {
+            btn.style.borderColor = "white";
+            btn.style.boxShadow = "none";
+        } else {
+            btn.style.borderColor = "var(--neon-green)";
+        }
+    });
+}
+
+async function showRanking() {
+    const { data } = await client.from('scores').select('*').order('score', { ascending: false }).limit(10);
+    const list = get("rankingList");
+    if (list && data) {
+        list.innerHTML = data.map((item, i) => 
+            `<li><span>${i + 1}. ${item.name}</span> <b>${item.score} pts</b></li>`
+        ).join("");
+    }
+    switchScreen('ranking');
+}
+
+function showAchievementsScreen() {
+    const container = get("achievementsList");
+    container.innerHTML = "";
+    Object.keys(ACHIEVEMENTS_LIST).forEach(key => {
+        const ach = ACHIEVEMENTS_LIST[key];
+        const unlocked = unlockedAchievements.includes(key);
+        container.innerHTML += `
+            <div class="achievement-card ${unlocked ? 'unlocked' : ''}">
+                <h4>${unlocked ? '🏆' : '🔒'} ${ach.name}</h4>
+                <p>${ach.desc}</p>
+            </div>`;
+    });
+    switchScreen('achievements');
 }
 
 function updateUI() {
     if(get("score")) get("score").innerText = score;
+    if(get("time")) get("time").innerText = time;
     if(get("walletAmount")) get("walletAmount").innerText = wallet;
-    // Mostrar nivel en la pantalla principal si quieres
-    if(get("userStatus")) {
-        const name = currentUser ? currentUser.email.split('@')[0] : "Invitado";
-        get("userStatus").innerHTML = `NIVEL ${level} - ${name} <br> XP: ${xp}/${getXPForNextLevel(level)}`;
-    }
+    if(get("displayLevel")) get("displayLevel").innerText = level;
+    if(currentUser) get("userStatus").innerText = `LVL ${level} - ${currentUser.email.split('@')[0].toUpperCase()}`;
 }
 
-// El resto de funciones (startGame, endGame, buySkin) se mantienen igual, 
-// solo asegúrate de llamar a saveProgress() en endGame().
+function goHome() { switchScreen('start'); }
+
+// --- 🔐 INICIO DE SESIÓN ---
+
+window.onload = () => {
+    get("playBtn").onclick = startGame;
+    get("restartBtn").onclick = startGame;
+    get("rankingBtn").onclick = showRanking;
+
+    get("loginBtn").onclick = async () => {
+        const email = get("email").value;
+        const password = get("password").value;
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        if (data.user) {
+            currentUser = data.user;
+            loadUserData();
+        } else {
+            alert("Error: " + error.message);
+        }
+    };
+
+    get("registerBtn").onclick = async () => {
+        const email = get("email").value;
+        const password = get("password").value;
+        const { error } = await client.auth.signUp({ email, password });
+        if (error) alert(error.message);
+        else alert("¡Confirma tu correo electrónico!");
+    };
+};
