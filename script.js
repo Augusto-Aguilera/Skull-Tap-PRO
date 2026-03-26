@@ -1,6 +1,5 @@
-
 /* =========================
-   💀 BASE + BACKEND PRO FIX
+   💀 BASE + BACKEND + COMBO PRO
 ========================= */
 
 function get(id){ return document.getElementById(id); }
@@ -20,7 +19,10 @@ let currentUser = null;
    🎮 GAME STATE
 ========================= */
 
-let score = 0, time = 15, wallet = 0, multiplier = 1;
+let score = 0, time = 15, wallet = 0;
+let multiplier = 1;
+let comboTimer = null;
+
 let currentSkin = "var(--neon-magenta)";
 let ownedSkins = ["var(--neon-magenta)"];
 
@@ -56,8 +58,8 @@ async function saveProfile(){
     const name = currentUser.email.split("@")[0];
 
     await client.from("profiles").upsert([{
-        name: name,
-        wallet: wallet,
+        name,
+        wallet,
         skins: JSON.stringify(ownedSkins)
     }]);
 }
@@ -109,12 +111,10 @@ async function showRanking(){
 
 window.addEventListener("load", () => {
 
-    // 🔥 BOTONES QUE FALTABAN
     get("playBtn").onclick = startGame;
     get("restartBtn").onclick = startGame;
     get("rankingBtn").onclick = showRanking;
 
-    // LOGIN
     get("loginBtn").onclick = async () => {
 
         const email = get("email").value;
@@ -136,7 +136,6 @@ window.addEventListener("load", () => {
         loadProfile();
     };
 
-    // REGISTER
     get("registerBtn").onclick = async () => {
 
         const email = get("email").value;
@@ -211,6 +210,12 @@ function updateUI(){
     get("score").innerText = score;
     get("time").innerText = time;
     get("walletAmount").innerText = wallet;
+    get("combo").innerText = "x" + multiplier;
+}
+
+function resetCombo(){
+    multiplier = 1;
+    updateUI();
 }
 
 function startGame(){
@@ -240,16 +245,18 @@ function spawnSkull(){
     skull.style.left = Math.random()*80+5+"%";
     skull.style.top = Math.random()*80+5+"%";
 
-    if(currentSkin === "rainbow"){
-        skull.style.animation = "rainbowGlow 1s infinite";
-    } else {
-        skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
-    }
+    skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
 
     skull.onclick = ()=>{
+
         score += 10 * multiplier;
         wallet += 1;
+
         multiplier++;
+
+        // reset timer combo
+        clearTimeout(comboTimer);
+        comboTimer = setTimeout(resetCombo, 1200);
 
         updateUI();
 
@@ -294,3 +301,4 @@ function goHome(){
 window.addEventListener("load", ()=>{
     updateShopUI();
 });
+
