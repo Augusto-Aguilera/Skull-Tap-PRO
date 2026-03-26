@@ -19,128 +19,94 @@
     </div>
 
     <div class="auth-container">
-        <div class="input-group">
-            <label for="email" style="display:none;">Email</label>
-            <input id="email" type="email" placeholder="Correo Electrónico">
-            <label for="password" style="display:none;">Password</label>
-            <input id="password" type="password" placeholder="Contraseña">
+        <div id="authInputs">
+            <div class="input-group">
+                <input id="email" type="email" placeholder="Correo Electrónico">
+                <input id="password" type="password" placeholder="Contraseña">
+            </div>
+            <div class="btn-group-row">
+                <button id="loginBtn" class="btn-mini">Entrar</button>
+                <button id="registerBtn" class="btn-mini btn-outline">Unirse</button>
+            </div>
         </div>
-        <div class="btn-group">
-            <button id="loginBtn">INICIAR SESIÓN</button>
-            <button id="registerBtn" class="btn-outline">REGISTRARSE</button>
-        </div>
-        <p id="userStatus">Inicia sesión para sincronizar tu progreso global</p>
+        <p id="userStatus" class="status-msg">Sincroniza tu progreso global</p>
+        <button id="logoutBtn" style="display:none;" class="btn-mini btn-outline-red">Cerrar Sesión</button>
     </div>
 
-    <div class="daily-missions-panel" id="dailyPanel">
-        <div class="panel-header">
-            <h4>📅 MISIONES DIARIAS</h4>
-            <span id="dailyRefreshTime">Reinicia en 24h</span>
-        </div>
-        <div id="dailyTasksList" class="tasks-container">
-            </div>
+    <div class="daily-missions-hud" id="dailyMissions">
+        <div class="hud-header">📅 OBJETIVOS DIARIOS</div>
+        <div id="missionsList"></div>
     </div>
 
     <div class="menu-main">
         <button id="playBtn" class="btn-giant">JUGAR AHORA</button>
+        
         <div class="menu-row">
-            <button onclick="switchScreen('shop')">🛒 TIENDA</button>
-            <button id="rankingBtn">🏆 RANKING</button>
-            <button onclick="showAchievementsScreen()">🏅 LOGROS</button>
+            <button class="btn-cyan" onclick="switchScreen('shop')">🛒 TIENDA</button>
+            <button class="btn-magenta" id="rankingBtn">🏆 RANKING</button>
+            <button class="btn-yellow" onclick="showAchievementsScreen()">🏅 LOGROS</button>
         </div>
     </div>
 </div>
 
 <div id="gameScreen" class="screen">
-    <div class="status-bar">
-        <div class="stat-box">
-            <span class="label">PUNTOS</span>
-            <b id="score">0</b>
-        </div>
-        <div id="comboContainer" class="stat-box combo-hide">
-            <span class="label">COMBO</span>
-            <b id="comboVal">x1</b>
-        </div>
-        <div class="stat-box">
-            <span class="label">TIEMPO</span>
-            <b id="time">15</b>
-        </div>
-        <div class="stat-box">
-            <span class="label">NIVEL</span>
-            <b id="displayLevel">1</b>
-        </div>
+    <div id="bossHealthBar" class="boss-health-container" style="display:none;">
+        <div class="boss-label">⚠️ BOSS APARECE ⚠️</div>
+        <div class="hp-bg"><div id="hpFill" class="hp-fill"></div></div>
     </div>
+
+    <div class="status-bar">
+        <span>PTS: <b id="score">0</b></span>
+        <span id="comboWrapper" class="combo-hidden">COMBO: <b id="comboText">x1</b></span>
+        <span>⏳ <b id="time">15</b></span>
+        <span>LVL: <b id="displayLevel">1</b></span>
+    </div>
+    <div id="gameArea"></div>
     
-    <div id="gameArea">
-        </div>
+    <div id="powerUpNotice" class="pu-notice"></div>
 </div>
 
 <div id="gameOverScreen" class="screen">
-    <h2 class="neon-text-mag">TIEMPO AGOTADO</h2>
-    <div class="result-card">
-        <p>Puntaje obtenido en esta sesión:</p>
+    <h2 class="neon-text-mag">PARTIDA TERMINADA</h2>
+    <div class="stats-round">
         <h3 id="finalScore">0 pts</h3>
-        <p id="xpGained" class="xp-text">+0 XP ACUMULADO</p>
+        <p id="xpGainedDisplay"></p>
     </div>
-    <div class="game-over-buttons">
-        <button id="restartBtn" class="btn-giant">REINTENTAR</button>
-        <button onclick="goHome()" class="btn-outline">VOLVER AL INICIO</button>
-    </div>
+    <button id="restartBtn" class="btn-giant">REINTENTAR</button>
+    <button onclick="goHome()" class="btn-outline">INICIO</button>
 </div>
 
 <div id="shopScreen" class="screen">
-    <h2 class="neon-text-cyan">🛒 TIENDA DE ALMAS</h2>
-    <div class="wallet-display">
-        Billetera Actual: <span id="walletAmount">0</span> <small>PTS</small>
-    </div>
-    
+    <h2 class="neon-text-cyan">🛒 TIENDA DE SKINS</h2>
+    <p>Billetera: <span id="walletAmount">0</span> pts</p>
     <div class="shop-grid">
-        <button class="shop-item" onclick="buySkin('var(--neon-magenta)', 0)">
-            MAGENTA <br> <small>(INICIAL)</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('#00fbff', 500)">
-            CYAN <br> <small>COSTO: 500</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('#ffcc00', 1000)">
-            LEVIATAN <br> <small>COSTO: 1000</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('#ff5500', 2000)">
-            INFERNO <br> <small>COSTO: 2000</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('#00aaff', 3500)">
-            LUCIFER <br> <small>COSTO: 3500</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('#6a00ff', 5000)">
-            MOLOCH <br> <small>COSTO: 5000</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('#ffd700', 8000)">
-            BAPHOMET <br> <small>COSTO: 8000</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('rainbow', 12000)">
-            ORULA <br> <small>COSTO: 12000</small>
-        </button>
+        <button class="btn-skin s-magenta" onclick="buySkin('var(--neon-magenta)', 0)">MAGENTA (FREE)</button>
+        <button class="btn-skin s-cyan" onclick="buySkin('#00fbff', 100)">CYAN (100)</button>
+        <button class="btn-skin s-green" onclick="buySkin('#00ffcc', 250)">VERDE (250)</button>
+        <button class="btn-skin s-yellow" onclick="buySkin('#ffcc00', 1000)">LEVIATAN (1K)</button>
+        <button class="btn-skin s-orange" onclick="buySkin('#ff5500', 2500)">INFERNO (2.5K)</button>
+        <button class="btn-skin s-purple" onclick="buySkin('#6a00ff', 7500)">MOLOCH (7.5K)</button>
+        <button class="btn-skin s-gold" onclick="buySkin('#ffd700', 15000)">BAPHOMET (15K)</button>
+        <button class="btn-skin s-rainbow" onclick="buySkin('rainbow', 50000)">ORULA (50K)</button>
     </div>
-
-    <button onclick="goHome()" class="btn-outline">SALIR DE LA TIENDA</button>
+    <button onclick="goHome()" class="btn-outline">VOLVER</button>
 </div>
 
 <div id="rankingScreen" class="screen">
-    <h2 class="neon-text-yellow">🏆 TOP 10 MUNDIAL</h2>
-    <div class="ranking-container">
-        <ul id="rankingList">
-            </ul>
-    </div>
-    <button onclick="goHome()" class="btn-outline">REGRESAR</button>
+    <h2 class="neon-text-mag">🏆 TOP 10 GLOBAL MUNDIAL</h2>
+    <ul id="rankingList" class="ranking-list"></ul>
+    <button onclick="goHome()" class="btn-outline">VOLVER</button>
 </div>
 
 <div id="achievementsScreen" class="screen">
-    <h2 class="neon-text-green">🏅 GALERÍA DE LOGROS</h2>
-    <div id="achievementsList" class="achievements-container">
-        </div>
-    <button onclick="goHome()" class="btn-outline">REGRESAR</button>
+    <h2 class="neon-text-yellow">🏅 GALERÍA DE LOGROS</h2>
+    <div id="achievementsList" class="achievements-container"></div>
+    <button onclick="goHome()" class="btn-outline">VOLVER</button>
 </div>
 
+<audio id="bgMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
 <audio id="hitSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+<audio id="badHitSound" src="https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3"></audio>
 <audio id="buySound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
 
 <script>
