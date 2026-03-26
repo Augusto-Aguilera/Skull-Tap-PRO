@@ -1,5 +1,5 @@
 /* =========================
-   💀 BASE + BACKEND + COMBO PRO
+   💀 BASE + BACKEND + COMBO + DIFICULTAD PRO
 ========================= */
 
 function get(id){ return document.getElementById(id); }
@@ -27,6 +27,7 @@ let currentSkin = "var(--neon-magenta)";
 let ownedSkins = ["var(--neon-magenta)"];
 
 let gameTimer, spawnTimer;
+let spawnSpeed = 800;
 
 /* =========================
    💾 PROFILE
@@ -222,6 +223,7 @@ function startGame(){
     score = 0;
     time = 15;
     multiplier = 1;
+    spawnSpeed = 800;
 
     goTo("gameScreen");
 
@@ -233,7 +235,20 @@ function startGame(){
         if(time <= 0) endGame();
     },1000);
 
-    spawnTimer = setInterval(spawnSkull,800);
+    spawnTimer = setInterval(spawnLoop, spawnSpeed);
+}
+
+/* 💀 NUEVO LOOP PROGRESIVO */
+function spawnLoop(){
+
+    spawnSkull();
+
+    if(spawnSpeed > 300){
+        spawnSpeed -= 10;
+
+        clearInterval(spawnTimer);
+        spawnTimer = setInterval(spawnLoop, spawnSpeed);
+    }
 }
 
 function spawnSkull(){
@@ -247,55 +262,52 @@ function spawnSkull(){
 
     skull.style.filter = `drop-shadow(0 0 10px ${currentSkin})`;
 
-   skull.onclick = ()=>{
+    skull.onclick = ()=>{
 
-    score += 10 * multiplier;
-    wallet += 1;
-    multiplier++;
+        score += 10 * multiplier;
+        wallet += 1;
+        multiplier++;
 
-    clearTimeout(comboTimer);
-    comboTimer = setTimeout(resetCombo, 1200);
+        clearTimeout(comboTimer);
+        comboTimer = setTimeout(resetCombo, 1200);
 
-    updateUI();
+        updateUI();
 
-    // 💥 EXPLOSIÓN
-    const explosion = document.createElement("div");
-    explosion.className = "explosion";
-    explosion.style.left = skull.style.left;
-    explosion.style.top = skull.style.top;
-    explosion.style.background = currentSkin;
-    get("gameArea").appendChild(explosion);
-    setTimeout(()=>explosion.remove(),400);
+        // 💥 explosión
+        const explosion = document.createElement("div");
+        explosion.className = "explosion";
+        explosion.style.left = skull.style.left;
+        explosion.style.top = skull.style.top;
+        explosion.style.background = currentSkin;
+        get("gameArea").appendChild(explosion);
+        setTimeout(()=>explosion.remove(),400);
 
-    // ✨ PARTÍCULAS
-    for(let i=0;i<8;i++){
-        const p = document.createElement("div");
-        p.className = "particle";
-        p.style.background = currentSkin;
+        // ✨ partículas
+        for(let i=0;i<8;i++){
+            const p = document.createElement("div");
+            p.className = "particle";
+            p.style.background = currentSkin;
 
-        const x = (Math.random()*100 - 50) + "px";
-        const y = (Math.random()*100 - 50) + "px";
+            p.style.setProperty("--x", (Math.random()*100-50)+"px");
+            p.style.setProperty("--y", (Math.random()*100-50)+"px");
 
-        p.style.setProperty("--x", x);
-        p.style.setProperty("--y", y);
+            p.style.left = skull.style.left;
+            p.style.top = skull.style.top;
 
-        p.style.left = skull.style.left;
-        p.style.top = skull.style.top;
+            get("gameArea").appendChild(p);
+            setTimeout(()=>p.remove(),600);
+        }
 
-        get("gameArea").appendChild(p);
-        setTimeout(()=>p.remove(),600);
-    }
+        // 📳 shake
+        const area = get("gameArea");
+        area.classList.add("shake");
+        setTimeout(()=>area.classList.remove("shake"),200);
 
-    // 📳 SHAKE
-    const area = get("gameArea");
-    area.classList.add("shake");
-    setTimeout(()=>area.classList.remove("shake"),200);
+        get("hitSound").currentTime = 0;
+        get("hitSound").play();
 
-    get("hitSound").currentTime = 0;
-    get("hitSound").play();
-
-    skull.remove();
-};
+        skull.remove();
+    };
 
     get("gameArea").appendChild(skull);
 
