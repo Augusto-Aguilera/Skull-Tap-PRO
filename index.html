@@ -14,9 +14,7 @@
 
 <div id="startScreen" class="screen active">
     <h1 class="logo">💀 SKULL TAP PRO</h1>
-    <div class="brand-sub">
-        &copy; 2026 Skull Tap PRO | Patric Aguilera &reg;
-    </div>
+    <div class="brand-sub">&copy; 2026 Skull Tap PRO | Patric Aguilera &reg;</div>
 
     <div class="auth-container">
         <div id="authInputs">
@@ -46,7 +44,6 @@
 
     <div class="menu-main">
         <button id="playBtn" class="btn-giant">JUGAR AHORA</button>
-        
         <div class="menu-row">
             <button class="btn-cyan" onclick="switchScreen('shop')">🛒 TIENDA</button>
             <button class="btn-magenta" id="rankingBtn">🏆 RANKING</button>
@@ -75,9 +72,7 @@
     </div>
 
     <div id="activeMultipliers" class="multipliers-display"></div>
-
     <div id="gameArea"></div>
-    
     <div id="powerUpNotice" class="pu-notice"></div>
 </div>
 
@@ -93,9 +88,15 @@
 </div>
 
 <div id="shopScreen" class="screen">
-    <h2 class="neon-text-cyan">🛒 TIENDA DE SKINS</h2>
+    <h2 class="neon-text-cyan">🛒 MERCADO PRO</h2>
     <p>Billetera: <span id="walletAmount">0</span> pts</p>
-    <div class="shop-grid">
+    
+    <div class="shop-tabs">
+        <button id="tabSkins" class="tab-btn active" onclick="showTab('skins')">SKINS</button>
+        <button id="tabUpgrades" class="tab-btn" onclick="showTab('upgrades')">MEJORAS</button>
+    </div>
+
+    <div id="skinsTab" class="shop-grid">
         <button class="btn-skin s-magenta" onclick="buySkin('var(--neon-magenta)', 0)">MAGENTA (FREE)</button>
         <button class="btn-skin s-cyan" onclick="buySkin('#00fbff', 100)">CYAN (100)</button>
         <button class="btn-skin s-green" onclick="buySkin('#00ffcc', 250)">VERDE (250)</button>
@@ -105,6 +106,13 @@
         <button class="btn-skin s-gold" onclick="buySkin('#ffd700', 15000)">BAPHOMET (15K)</button>
         <button class="btn-skin s-rainbow" onclick="buySkin('rainbow', 50000)">ORULA (50K)</button>
     </div>
+
+    <div id="upgradesTab" class="shop-grid" style="display:none;">
+        <button class="btn-skin s-green" onclick="buyUpgrade('magnet')">🧲 IMÁN (Lvl <span id="lvl_magnet">0</span>)<br><small id="cost_magnet">500</small> pts</button>
+        <button class="btn-skin s-cyan" onclick="buyUpgrade('time')">⏳ PULSO TIEMPO (Lvl <span id="lvl_time">0</span>)<br><small id="cost_time">800</small> pts</button>
+        <button class="btn-skin s-yellow" onclick="buyUpgrade('luck')">🍀 SUERTE ORO (Lvl <span id="lvl_luck">0</span>)<br><small id="cost_luck">1200</small> pts</button>
+    </div>
+
     <button onclick="goHome()" class="btn-outline">VOLVER</button>
 </div>
 
@@ -129,6 +137,12 @@
     function switchScreen(screenId){
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(screenId + "Screen").classList.add("active");
+    }
+    function showTab(tabName) {
+        document.getElementById('skinsTab').style.display = tabName === 'skins' ? 'grid' : 'none';
+        document.getElementById('upgradesTab').style.display = tabName === 'upgrades' ? 'grid' : 'none';
+        document.getElementById('tabSkins').classList.toggle('active', tabName === 'skins');
+        document.getElementById('tabUpgrades').classList.toggle('active', tabName === 'upgrades');
     }
 </script>
 <script src="script.js"></script>
