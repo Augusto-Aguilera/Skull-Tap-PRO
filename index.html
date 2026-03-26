@@ -13,7 +13,10 @@
 <div class="bg-overlay"></div>
 
 <div id="startScreen" class="screen active">
-    <footer class="footer-copy">&copy; 2026 Skull Tap PRO <br> Patric Aguilera &reg;</footer>
+    <footer class="footer-copy">
+        &copy; 2026 Skull Tap PRO <br> Patric Aguilera &reg;
+    </footer>
+
     <h1 class="logo">💀 SKULL TAP PRO</h1>
 
     <div class="auth-container">
@@ -42,6 +45,7 @@
     <div class="status-bar">
         <span>PTS: <b id="score">0</b></span>
         <span>TIEMPO: <b id="time">15</b></span>
+        <span>NIVEL: <b id="displayLevel">1</b></span>
     </div>
     <div id="gameArea"></div>
 </div>
@@ -56,6 +60,7 @@
 <div id="shopScreen" class="screen">
     <h2>🛒 TIENDA</h2>
     <p>Billetera: <span id="walletAmount">0</span> pts</p>
+
     <div class="shop-grid">
         <button onclick="buySkin('var(--neon-magenta)', 0)">MAGENTA</button>
         <button onclick="buySkin('#00fbff', 500)">CYAN</button>
@@ -66,18 +71,20 @@
         <button onclick="buySkin('#ffd700', 8000)">BAPHOMET</button>
         <button onclick="buySkin('rainbow', 12000)">ORULA</button>
     </div>
+
     <button onclick="goHome()" class="btn-outline">VOLVER</button>
 </div>
 
 <div id="rankingScreen" class="screen">
     <h2>🏆 TOP 10 GLOBAL</h2>
-    <ul id="rankingList"></ul>
+    <ul id="rankingList" class="ranking-list"></ul>
     <button onclick="goHome()" class="btn-outline">VOLVER</button>
 </div>
 
 <div id="achievementsScreen" class="screen">
     <h2>🏅 MIS LOGROS</h2>
-    <div id="achievementsList" class="achievements-container"></div>
+    <div id="achievementsList" class="achievements-container">
+        </div>
     <button onclick="goHome()" class="btn-outline">VOLVER</button>
 </div>
 
@@ -85,10 +92,10 @@
 <audio id="buySound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
 
 <script>
-function switchScreen(s){
-    document.querySelectorAll('.screen').forEach(sec => sec.classList.remove('active'));
-    document.getElementById(s + "Screen").classList.add("active");
-}
+    function switchScreen(screenId){
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId + "Screen").classList.add("active");
+    }
 </script>
 <script src="script.js"></script>
 </body>
