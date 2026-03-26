@@ -12,7 +12,6 @@ let ownedSkins = ["var(--neon-magenta)"];
 let unlockedAchievements = [];
 let gameTimer, spawnTimer, puTimer;
 
-// MEJORAS (Upgrades)
 let upgrades = { magnet: 0, time: 0, luck: 0 };
 const UPGRADE_DATA = {
     magnet: { baseCost: 500, max: 5 },
@@ -23,6 +22,7 @@ const UPGRADE_DATA = {
 let streakCount = 0, lastLoginDate = null;
 let bossActive = false, bossHP = 100, doublePoints = false;
 let combo = 1, comboHits = 0, lastHitTime = 0;
+let xpAtStartOfRound = 0; // Para calcular XP ganada al final
 
 const PLAYLIST = [
     "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
@@ -57,31 +57,18 @@ const ACHIEVEMENTS_LIST = {
     "D2": { name: "Leyenda Viviente", tier: "dificil", desc: "Llega al Nivel 30", req: () => level >= 30 }
 };
 
-// --- MEJORAS DE CÓDIGO (Nuevas Funciones) ---
 function buyUpgrade(type) {
     let currentLvl = upgrades[type];
     if(currentLvl >= UPGRADE_DATA[type].max) return alert("Nivel máximo");
-    
     let cost = UPGRADE_DATA[type].baseCost * (currentLvl + 1);
     if(wallet < cost) return alert("Puntos insuficientes");
-
-    wallet -= cost;
-    upgrades[type]++;
-    updateUI();
-    updateShopUI();
-    saveProgress();
+    wallet -= cost; upgrades[type]++; updateUI(); updateShopUI(); saveProgress();
     if(get("buySound")) get("buySound").play();
 }
 
-// --- AUTH & DATA ---
 async function checkSession() {
     const { data: { session } } = await client.auth.getSession();
-    if (session) {
-        currentUser = session.user;
-        toggleAuthUI(true);
-        await loadUserData();
-        checkDailyStreak();
-    }
+    if (session) { currentUser = session.user; toggleAuthUI(true); await loadUserData(); checkDailyStreak(); }
 }
 
 function toggleAuthUI(isLoggedIn) {
@@ -101,7 +88,6 @@ async function loadUserData() {
         streakCount = data.streak || 0; lastLoginDate = data.last_login;
         if (data.skins) ownedSkins = data.skins.split(',');
         if (data.achievements) unlockedAchievements = data.achievements.split(',');
-        // Cargar mejoras (Guardadas como JSON o string, aquí parseamos si existe)
         if (data.upgrades) upgrades = JSON.parse(data.upgrades);
         updateUI(); updateShopUI();
     }
@@ -110,10 +96,7 @@ async function loadUserData() {
 
 function checkDailyStreak() {
     const today = new Date().toISOString().split('T')[0];
-    if (lastLoginDate === today) {
-        get("streakDisplay").innerText = `🔥 Racha: ${streakCount} días`;
-        return;
-    }
+    if (lastLoginDate === today) { get("streakDisplay").innerText = `🔥 Racha: ${streakCount} días`; return; }
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
     if (lastLoginDate === yesterdayStr) streakCount++;
@@ -134,16 +117,21 @@ async function saveProgress() {
         name: userName, score: topScore, wallet: wallet, xp: xp, level: level,
         skins: ownedSkins.join(','), achievements: unlockedAchievements.join(','),
         streak: streakCount, last_login: lastLoginDate,
-        upgrades: JSON.stringify(upgrades) // Guardamos las mejoras
+        upgrades: JSON.stringify(upgrades)
     }], { onConflict: 'name' });
 }
 
 function startGame() {
     updateMusic();
+    xpAtStartOfRound = xp; // Guardamos XP inicial para comparar al final
     score = 0; time = 15; combo = 1; comboHits = 0; bossActive = false; doublePoints = false;
     get("bossHealthBar").style.display = "none";
     switchScreen('game'); updateUI();
-    gameTimer = setInterval(() => { time--; updateUI(); if (time <= 0) endGame(); }, 1000);
+    gameTimer = setInterval(() => { 
+        time--; 
+        updateUI(); 
+        if (time <= 0) endGame(); 
+    }, 1000);
     spawnTimer = setInterval(spawnSkull, 800);
     puTimer = setInterval(spawnPowerUp, 7000); 
 }
@@ -201,6 +189,7 @@ function spawnBoss() {
             boss.remove(); get("bossHealthBar").style.display = "none";
             showNotice("BOSS DERROTADO: +500 PTS");
             updateWeeklyChallenges(0, 1); spawnTimer = setInterval(spawnSkull, 800);
+            updateUI();
         }
     };
     get("gameArea").appendChild(boss);
@@ -212,16 +201,13 @@ function spawnSkull() {
 
     const area = get("gameArea");
     const skull = document.createElement("div");
-    
-    // MEJORA: SUERTE ORO
     const luckChance = 0.05 + (upgrades.luck * 0.05);
     const isGold = Math.random() < luckChance;
     const isDistraction = !isGold && Math.random() < 0.15;
 
-    skull.className = "target" + (isDistraction ? " distraction" : "");
+    skull.className = "target" + (isDistraction ? " distraction" : (isGold ? " gold" : ""));
     skull.innerHTML = isGold ? "💰" : (isDistraction ? "😡" : "💀");
     
-    // MEJORA: IMÁN (Tamaño)
     const baseSize = isDistraction ? 50 : 70;
     const newSize = baseSize + (upgrades.magnet * 8);
     skull.style.width = newSize + "px"; skull.style.height = newSize + "px";
@@ -245,14 +231,20 @@ function spawnSkull() {
             
             let pts = (isGold ? 100 : 10) * combo;
             if (doublePoints) pts *= 2; 
-            score += pts; wallet += 1; addXP(25);
+            score += pts; wallet += (isGold ? 5 : 1); addXP(isGold ? 100 : 25);
             
-            // MEJORA: PULSO TIEMPO
             if(upgrades.time > 0) time += (upgrades.time * 0.1);
+
+            if(isGold) {
+                if(get("goldHitSound")) { get("goldHitSound").currentTime = 0; get("goldHitSound").play(); }
+                createFloatingText(e.clientX, e.clientY, `+${pts}`);
+                createGoldExplosion(e.clientX, e.clientY);
+            } else {
+                if(get("hitSound")) { get("hitSound").currentTime = 0; get("hitSound").play(); }
+            }
 
             updateMissions(1, combo, pts); updateWeeklyChallenges(pts, 0);
             checkAchievements(); createHitEffects(e.clientX, e.clientY); screenVibrate();
-            if(get("hitSound")) { get("hitSound").currentTime = 0; get("hitSound").play(); }
         }
         updateUI(); updateMultipliersDisplay(); skull.remove();
     };
@@ -261,6 +253,26 @@ function spawnSkull() {
     skull.style.top = Math.random() * 80 + 5 + "%";
     area.appendChild(skull);
     setTimeout(() => { if(skull.parentElement) { skull.remove(); if (!isDistraction) { combo = 1; comboHits = 0; updateUI(); updateMultipliersDisplay(); } } }, 1200);
+}
+
+function createFloatingText(x, y, txt) {
+    const area = get("gameArea"); const rect = area.getBoundingClientRect();
+    const ft = document.createElement("div"); ft.className = "floating-text";
+    ft.innerText = txt; ft.style.left = (x - rect.left) + "px"; ft.style.top = (y - rect.top) + "px";
+    area.appendChild(ft); setTimeout(() => ft.remove(), 800);
+}
+
+function createGoldExplosion(x, y) {
+    const area = get("gameArea"); const rect = area.getBoundingClientRect();
+    for (let i = 0; i < 15; i++) {
+        const p = document.createElement("div"); p.className = "particle";
+        p.style.width = p.style.height = "8px"; p.style.background = "gold";
+        p.style.left = (x - rect.left) + "px"; p.style.top = (y - rect.top) + "px";
+        p.style.boxShadow = "0 0 10px white";
+        const angle = Math.random() * Math.PI * 2, dist = Math.random() * 150 + 50;
+        area.appendChild(p);
+        p.animate([{ transform: 'translate(0,0) rotate(0deg)', opacity: 1 }, { transform: `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) rotate(360deg)`, opacity: 0 }], { duration: 800 }).onfinish = () => p.remove();
+    }
 }
 
 function showNotice(msg) { const n = get("powerUpNotice"); n.innerText = msg; n.style.opacity = "1"; setTimeout(() => n.style.opacity = "0", 2000); }
@@ -314,7 +326,26 @@ function checkAchievements() {
 }
 
 function showAchievementToast(msg) { const t = document.createElement("div"); t.className = "achievement-toast"; t.innerHTML = `🏆 ${msg}`; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
-function endGame() { clearInterval(gameTimer); clearInterval(spawnTimer); clearInterval(puTimer); get("gameArea").innerHTML = ""; switchScreen('gameOver'); saveProgress(); }
+
+// --- CORRECCIÓN EN ENDGAME ---
+function endGame() { 
+    clearInterval(gameTimer); 
+    clearInterval(spawnTimer); 
+    clearInterval(puTimer); 
+    
+    // Mostramos los puntos reales en la pantalla final antes de cambiar
+    get("finalScore").innerText = score.toLocaleString() + " PTS";
+    
+    // Calculamos XP ganada
+    let xpGained = Math.floor(xp - xpAtStartOfRound);
+    if(xpGained < 0) xpGained = 0; // Por si bajó por distracciones
+    get("xpGainedDisplay").innerText = `+${xpGained} XP acumulada`;
+
+    get("gameArea").innerHTML = ""; 
+    switchScreen('gameOver'); 
+    saveProgress(); 
+}
+
 function shareProgress() { const text = `💀 ¡Acabo de conseguir ${score} puntos en Skull Tap PRO! Soy nivel ${level}. ¿Puedes superarme?`; window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank'); }
 
 function buySkin(color, price) {
@@ -325,7 +356,6 @@ function buySkin(color, price) {
 }
 
 function updateShopUI() {
-    // Skins
     document.querySelectorAll("#skinsTab button").forEach(btn => {
         const onClickAttr = btn.getAttribute("onclick");
         if(onClickAttr) {
@@ -334,7 +364,6 @@ function updateShopUI() {
             else if(ownedSkins.includes(color)) { btn.style.borderColor = "white"; btn.style.background = "none"; }
         }
     });
-    // Upgrades
     Object.keys(upgrades).forEach(type => {
         get(`lvl_${type}`).innerText = upgrades[type];
         let nextCost = UPGRADE_DATA[type].baseCost * (upgrades[type] + 1);
@@ -357,8 +386,10 @@ function showAchievementsScreen() {
 }
 
 function updateUI() {
-    get("score").innerText = score; get("time").innerText = Math.floor(time);
-    get("walletAmount").innerText = wallet; get("displayLevel").innerText = level;
+    get("score").innerText = score.toLocaleString(); 
+    get("time").innerText = Math.floor(time);
+    get("walletAmount").innerText = wallet.toLocaleString(); 
+    get("displayLevel").innerText = level;
     const nextLevelXP = level * 1000; const xpPercent = (xp / nextLevelXP) * 100;
     get("xpFill").style.width = xpPercent + "%"; get("xpText").innerText = `${Math.floor(xp)} / ${nextLevelXP} XP`;
     if(combo > 1) { get("comboWrapper").classList.remove("combo-hidden"); get("comboText").innerText = "x" + combo; }
