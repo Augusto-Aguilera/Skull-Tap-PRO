@@ -1,6 +1,6 @@
 
 /* =========================
-   💀 BASE + BACKEND PRO
+   💀 BASE + BACKEND PRO FIX
 ========================= */
 
 function get(id){ return document.getElementById(id); }
@@ -27,7 +27,7 @@ let ownedSkins = ["var(--neon-magenta)"];
 let gameTimer, spawnTimer;
 
 /* =========================
-   💾 PROFILE (wallet + skins)
+   💾 PROFILE
 ========================= */
 
 async function loadProfile(){
@@ -63,7 +63,7 @@ async function saveProfile(){
 }
 
 /* =========================
-   🏆 RANKING REAL
+   🏆 RANKING
 ========================= */
 
 async function saveScore(){
@@ -71,7 +71,6 @@ async function saveScore(){
 
     const name = currentUser.email.split("@")[0];
 
-    // ver si ya existe
     const { data } = await client
         .from("scores")
         .select("*")
@@ -79,7 +78,6 @@ async function saveScore(){
         .maybeSingle();
 
     if(data){
-        // guardar solo si es mejor
         if(score > data.score){
             await client.from("scores").update({ score }).eq("name", name);
         }
@@ -98,13 +96,9 @@ async function showRanking(){
 
     const list = get("rankingList");
 
-    if(!data || data.length === 0){
-        list.innerHTML = "<li>No hay puntajes aún</li>";
-    } else {
-        list.innerHTML = data
-            .map((p,i)=> `<li>${i+1}. ${p.name}: ${p.score} pts</li>`)
-            .join("");
-    }
+    list.innerHTML = !data || data.length === 0
+        ? "<li>No hay puntajes aún</li>"
+        : data.map((p,i)=> `<li>${i+1}. ${p.name}: ${p.score} pts</li>`).join("");
 
     goTo("rankingScreen");
 }
@@ -115,6 +109,12 @@ async function showRanking(){
 
 window.addEventListener("load", () => {
 
+    // 🔥 BOTONES QUE FALTABAN
+    get("playBtn").onclick = startGame;
+    get("restartBtn").onclick = startGame;
+    get("rankingBtn").onclick = showRanking;
+
+    // LOGIN
     get("loginBtn").onclick = async () => {
 
         const email = get("email").value;
@@ -136,6 +136,7 @@ window.addEventListener("load", () => {
         loadProfile();
     };
 
+    // REGISTER
     get("registerBtn").onclick = async () => {
 
         const email = get("email").value;
@@ -152,7 +153,6 @@ window.addEventListener("load", () => {
         }
     };
 
-    get("rankingBtn").onclick = showRanking;
 });
 
 /* =========================
@@ -274,7 +274,7 @@ function endGame(){
     goTo("gameOverScreen");
 
     saveProfile();
-    saveScore(); // 🏆 GUARDA SCORE
+    saveScore();
 }
 
 /* =========================
