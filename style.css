@@ -145,3 +145,25 @@ input:checked + .slider:before { transform: translateX(24px); }
     0% { transform: translate(-50%, -50%) scale(1) translateY(0); opacity: 1; }
     100% { transform: translate(-50%, -50%) scale(1.5) translateY(-60px); opacity: 0; }
 }
+.achievement-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.9);
+    border-left: 5px solid var(--neon-cyan);
+    padding: 15px 25px;
+    border-radius: 5px;
+    color: white;
+    box-shadow: 0 0 15px rgba(0, 251, 255, 0.4);
+    animation: slideIn 0.5s ease-out, fadeOut 0.5s 2.5s forwards;
+    z-index: 1000;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; visibility: hidden; }
+}
