@@ -31,9 +31,16 @@ body, html {
 
 /* HUD MISIONES */
 .daily-missions-hud { position: absolute; top: 20px; right: 20px; width: 220px; background: rgba(0, 0, 0, 0.85); border-right: 4px solid var(--neon-yellow); padding: 10px; border-radius: 8px 0 0 8px; z-index: 1000; backdrop-filter: blur(5px); }
+.weekly-challenges-hud { position: absolute; top: 140px; right: 20px; width: 220px; background: rgba(0, 0, 0, 0.85); border-right: 4px solid var(--neon-cyan); padding: 10px; border-radius: 8px 0 0 8px; z-index: 1000; backdrop-filter: blur(5px); }
+
 .hud-header { font-size: 0.7rem; font-weight: bold; color: var(--neon-yellow); margin-bottom: 8px; border-bottom: 1px solid #333; }
+.weekly-challenges-hud .hud-header { color: var(--neon-cyan); }
+
 .mission-item { font-size: 0.7rem; margin-bottom: 6px; text-align: left; color: #bbb; }
 .mission-item.completed { color: var(--neon-green); text-decoration: line-through; opacity: 0.6; }
+
+/* MEJORA: STREAK BADGE */
+.streak-badge { background: linear-gradient(45deg, #ff5500, #ffcc00); color: black; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; margin: 10px auto; display: inline-block; box-shadow: 0 0 10px #ff5500; }
 
 /* BOSS BAR */
 .boss-health-container { width: 80%; max-width: 350px; margin-bottom: 15px; position: absolute; top: 80px; z-index: 100; }
