@@ -191,42 +191,8 @@ input:checked + .slider:before {
 }
 
 /* =========================
-   💥 EFECTOS AGREGADOS
+   💥 EFECTOS AGREGADOS POR PATRIC
 ========================= */
-
-/* 💥 EXPLOSIÓN */
-.explosion {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    animation: explode 0.4s forwards;
-    pointer-events: none;
-}
-
-@keyframes explode {
-    to {
-        transform: scale(5);
-        opacity: 0;
-    }
-}
-
-/* ✨ PARTÍCULAS */
-.particle {
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    pointer-events: none;
-    animation: particleMove 0.6s linear forwards;
-}
-
-@keyframes particleMove {
-    to {
-        transform: translate(var(--x), var(--y));
-        opacity: 0;
-    }
-}
 
 /* 🌈 GLITCH (SKIN LEGENDARIA) */
 @keyframes rainbowGlow {
@@ -237,8 +203,34 @@ input:checked + .slider:before {
     100% { filter: drop-shadow(0 0 10px magenta); }
 }
 
-/* 💰 MEJORA VISUAL TIENDA */
-.shop-grid button {
-    letter-spacing: 1px;
-    text-shadow: 0 0 5px rgba(0,255,200,0.3);
+/* 💥 EXPLOSIÓN VISUAL */
+.explosion-fx {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 5;
+    animation: explodeAnim 0.4s ease-out forwards;
+}
+
+@keyframes explodeAnim {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(6); opacity: 0; }
+}
+
+/* 💀 EMOJI FLOTANTE */
+.skull-splatter {
+    position: absolute;
+    font-size: 40px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 6;
+    animation: splatterAnim 0.7s ease-out forwards;
+}
+
+@keyframes splatterAnim {
+    0% { transform: translate(-50%, -50%) scale(1) translateY(0); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.5) translateY(-60px); opacity: 0; }
 }
