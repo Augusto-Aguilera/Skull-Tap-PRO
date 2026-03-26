@@ -11,7 +11,7 @@ let currentSkin = "var(--neon-magenta)";
 let ownedSkins = ["var(--neon-magenta)"];
 let unlockedAchievements = [];
 let gameTimer, spawnTimer, puTimer;
-let highVisualScore = 0; // Para comparar récords localmente en la sesión
+let highVisualScore = 0; 
 
 let upgrades = { magnet: 0, time: 0, luck: 0 };
 const UPGRADE_DATA = {
@@ -58,6 +58,74 @@ const ACHIEVEMENTS_LIST = {
     "D2": { name: "Leyenda Viviente", tier: "dificil", desc: "Llega al Nivel 30", req: () => level >= 30 }
 };
 
+// --- Inyección de Estilos para Récord y Partículas ---
+const style = document.createElement('style');
+style.innerHTML = `
+    @keyframes neonBlink {
+        0%, 100% { opacity: 1; text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan); }
+        50% { opacity: 0.5; text-shadow: 0 0 5px var(--neon-cyan); }
+    }
+    .blink-record { animation: neonBlink 0.8s infinite; z-index: 100; position: relative; }
+    .firework-particle {
+        position: fixed;
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 999;
+    }
+`;
+document.head.appendChild(style);
+
+// --- Función de Sonido de Fanfarria ---
+function playVictorySound() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523.25, 659.25, 783.99, 1046.50]; 
+    notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.1);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime + i * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + i * 0.1 + 0.5);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + i * 0.1);
+        osc.stop(audioCtx.currentTime + i * 0.1 + 0.5);
+    });
+}
+
+// --- Función de Fuegos Artificiales ---
+function launchFireworks() {
+    const colors = ["#00fbff", "#ff00ff", "#00ffcc", "#fff000"];
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * (window.innerHeight * 0.5);
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            for (let j = 0; j < 30; j++) {
+                const p = document.createElement("div");
+                p.className = "firework-particle";
+                p.style.backgroundColor = color;
+                p.style.boxShadow = `0 0 10px ${color}`;
+                p.style.left = x + "px";
+                p.style.top = y + "px";
+                document.body.appendChild(p);
+                
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = Math.random() * 150 + 50;
+                const destX = Math.cos(angle) * velocity;
+                const destY = Math.sin(angle) * velocity;
+                
+                p.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${destX}px, ${destY}px) scale(0)`, opacity: 0 }
+                ], { duration: 1000 + Math.random() * 500, easing: 'ease-out' }).onfinish = () => p.remove();
+            }
+        }, i * 300);
+    }
+}
+
 function buyUpgrade(type) {
     let currentLvl = upgrades[type];
     if(currentLvl >= UPGRADE_DATA[type].max) return alert("Nivel máximo");
@@ -87,7 +155,7 @@ async function loadUserData() {
     if (data) {
         wallet = data.wallet || 0; xp = data.xp || 0; level = data.level || 1;
         streakCount = data.streak || 0; lastLoginDate = data.last_login;
-        highVisualScore = data.score || 0; // Cargamos el récord desde la DB
+        highVisualScore = data.score || 0;
         if (data.skins) ownedSkins = data.skins.split(',');
         if (data.achievements) unlockedAchievements = data.achievements.split(',');
         if (data.upgrades) upgrades = JSON.parse(data.upgrades);
@@ -312,46 +380,47 @@ function checkAchievements() {
 
 function showAchievementToast(msg) { const t = document.createElement("div"); t.className = "achievement-toast"; t.innerHTML = `🏆 ${msg}`; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
 
-// --- FUNCIÓN ENDGAME REPARADA Y MEJORADA ---
+// --- ENDGAME REPARADO: Con Récord, Fanfarria y Fuegos Artificiales ---
 function endGame() { 
     clearInterval(gameTimer); 
     clearInterval(spawnTimer); 
     clearInterval(puTimer); 
     
-    // Captura inmediata de puntos
     const finalScoreValue = score;
     const finalScoreDisplay = get("finalScore");
     const xpDisplay = get("xpGainedDisplay");
     
-    // Mostramos puntos finales
     if(finalScoreDisplay) {
         finalScoreDisplay.innerText = finalScoreValue.toLocaleString() + " pts";
     }
     
-    // Lógica de Nuevo Récord
+    // Lógica de Récord
     if(finalScoreValue > highVisualScore && finalScoreValue > 0) {
         highVisualScore = finalScoreValue;
+        
         const recordMsg = document.createElement("div");
         recordMsg.id = "newRecordMsg";
+        recordMsg.className = "blink-record";
         recordMsg.style.color = "var(--neon-cyan)";
-        recordMsg.style.textShadow = "0 0 10px var(--neon-cyan)";
         recordMsg.style.fontWeight = "bold";
         recordMsg.style.fontSize = "1.5rem";
         recordMsg.style.margin = "10px 0";
         recordMsg.innerText = "¡NUEVO RÉCORD PERSONAL!";
         
-        // Insertar el mensaje arriba de los puntos
         if(finalScoreDisplay.parentElement) {
             const existing = get("newRecordMsg");
             if(existing) existing.remove();
             finalScoreDisplay.parentElement.insertBefore(recordMsg, finalScoreDisplay);
         }
+        
+        // EFECTOS DE CELEBRACIÓN
+        playVictorySound();
+        launchFireworks();
     } else {
         const existing = get("newRecordMsg");
         if(existing) existing.remove();
     }
 
-    // Calculamos XP ganada
     let xpGained = Math.floor(xp - xpAtStartOfRound);
     if(xpGained < 0) xpGained = 0;
     if(xpDisplay) xpDisplay.innerText = `+${xpGained} XP ganada en esta ronda`;
