@@ -8,16 +8,15 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
-<body>
+<body id="mainBody">
 
 <div class="bg-overlay"></div>
 
 <div id="startScreen" class="screen active">
-    <footer class="footer-copy">
-        &copy; 2026 Skull Tap PRO <br> Patric Aguilera &reg;
-    </footer>
-
     <h1 class="logo">💀 SKULL TAP PRO</h1>
+    <div class="brand-sub">
+        &copy; 2026 Skull Tap PRO | Patric Aguilera &reg;
+    </div>
 
     <div class="auth-container">
         <div class="input-group">
@@ -28,7 +27,12 @@
             <button id="loginBtn">INICIAR SESIÓN</button>
             <button id="registerBtn" class="btn-outline">REGISTRARSE</button>
         </div>
-        <p id="userStatus">Inicia sesión para sincronizar tus logros y nivel</p>
+        <p id="userStatus">Inicia sesión para sincronizar progreso</p>
+    </div>
+
+    <div class="daily-preview" id="dailyPreview">
+        <h4>📅 MISIONES DE HOY</h4>
+        <div id="dailyTasksList"></div>
     </div>
 
     <div class="menu-main">
@@ -43,19 +47,20 @@
 
 <div id="gameScreen" class="screen">
     <div class="status-bar">
-        <div class="stat-box">PUNTOS: <b id="score">0</b></div>
-        <div class="stat-box">TIEMPO: <b id="time">15</b></div>
-        <div class="stat-box">NIVEL: <b id="displayLevel">1</b></div>
+        <div class="stat-box">PTS: <b id="score">0</b></div>
+        <div id="comboContainer" class="stat-box combo-hide">x<b id="comboVal">1</b></div>
+        <div class="stat-box">⏳ <b id="time">15</b></div>
+        <div class="stat-box">LVL: <b id="displayLevel">1</b></div>
     </div>
-    <div id="gameArea">
-        </div>
+    <div id="gameArea"></div>
 </div>
 
 <div id="gameOverScreen" class="screen">
     <h2 class="neon-text-mag">PARTIDA TERMINADA</h2>
     <div class="result-card">
-        <p>Puntaje de la sesión:</p>
+        <p>Puntaje obtenido:</p>
         <h3 id="finalScore">0 pts</h3>
+        <p id="xpGained">+0 XP</p>
     </div>
     <button id="restartBtn" class="btn-giant">VOLVER A JUGAR</button>
     <button onclick="goHome()" class="btn-outline">MENÚ PRINCIPAL</button>
@@ -63,53 +68,29 @@
 
 <div id="shopScreen" class="screen">
     <h2>🛒 TIENDA DE ALMAS</h2>
-    <div class="wallet-display">
-        Billetera: <span id="walletAmount">0</span> <small>PTS</small>
-    </div>
-    
+    <div class="wallet-display">Billetera: <span id="walletAmount">0</span> PTS</div>
     <div class="shop-grid">
-        <button class="shop-item" onclick="buySkin('var(--neon-magenta)', 0)">
-            MAGENTA <br> <small>(INICIAL)</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('#00fbff', 500)">
-            CYAN <br> <small>500 PTS</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('#ffcc00', 1000)">
-            LEVIATAN <br> <small>1000 PTS</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('#ff5500', 2000)">
-            INFERNO <br> <small>2000 PTS</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('#00aaff', 3500)">
-            LUCIFER <br> <small>3500 PTS</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('#6a00ff', 5000)">
-            MOLOCH <br> <small>5000 PTS</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('#ffd700', 8000)">
-            BAPHOMET <br> <small>8000 PTS</small>
-        </button>
-        <button class="shop-item" onclick="buySkin('rainbow', 12000)">
-            ORULA <br> <small>12000 PTS</small>
-        </button>
+        <button class="shop-item" onclick="buySkin('var(--neon-magenta)', 0)">MAGENTA</button>
+        <button class="shop-item" onclick="buySkin('#00fbff', 500)">CYAN</button>
+        <button class="shop-item" onclick="buySkin('#ffcc00', 1000)">LEVIATAN</button>
+        <button class="shop-item" onclick="buySkin('#ff5500', 2000)">INFERNO</button>
+        <button class="shop-item" onclick="buySkin('#00aaff', 3500)">LUCIFER</button>
+        <button class="shop-item" onclick="buySkin('#6a00ff', 5000)">MOLOCH</button>
+        <button class="shop-item" onclick="buySkin('#ffd700', 8000)">BAPHOMET</button>
+        <button class="shop-item" onclick="buySkin('rainbow', 12000)">ORULA</button>
     </div>
-
     <button onclick="goHome()" class="btn-outline">REGRESAR</button>
 </div>
 
 <div id="rankingScreen" class="screen">
-    <h2>🏆 RANKING MUNDIAL</h2>
-    <div class="ranking-container">
-        <ul id="rankingList">
-            </ul>
-    </div>
+    <h2>🏆 TOP 10 GLOBAL</h2>
+    <div class="ranking-container"><ul id="rankingList"></ul></div>
     <button onclick="goHome()" class="btn-outline">REGRESAR</button>
 </div>
 
 <div id="achievementsScreen" class="screen">
     <h2>🏅 GALERÍA DE LOGROS</h2>
-    <div id="achievementsList" class="achievements-container">
-        </div>
+    <div id="achievementsList" class="achievements-container"></div>
     <button onclick="goHome()" class="btn-outline">REGRESAR</button>
 </div>
 
@@ -117,7 +98,6 @@
 <audio id="buySound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
 
 <script>
-    // Función de navegación rápida
     function switchScreen(screenId){
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(screenId + "Screen").classList.add("active");
