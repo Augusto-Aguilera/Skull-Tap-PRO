@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Skull Tap PRO</title>
+    <title>Skull Tap PRO - Ultimate Edition</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💀</text></svg>">
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -21,77 +21,106 @@
 
     <div class="auth-container">
         <div class="input-group">
-            <input id="email" type="email" placeholder="Email">
+            <input id="email" type="email" placeholder="Correo Electrónico">
             <input id="password" type="password" placeholder="Contraseña">
         </div>
         <div class="btn-group">
-            <button id="loginBtn">Entrar</button>
-            <button id="registerBtn" class="btn-outline">Unirse</button>
+            <button id="loginBtn">INICIAR SESIÓN</button>
+            <button id="registerBtn" class="btn-outline">REGISTRARSE</button>
         </div>
-        <p id="userStatus">Inicia sesión para guardar tu progreso</p>
+        <p id="userStatus">Inicia sesión para sincronizar tus logros y nivel</p>
     </div>
 
     <div class="menu-main">
         <button id="playBtn" class="btn-giant">JUGAR AHORA</button>
         <div class="menu-row">
-            <button onclick="switchScreen('shop')">🛒 Tienda</button>
-            <button id="rankingBtn">🏆 Ranking</button>
-            <button onclick="showAchievementsScreen()">🏅 Logros</button>
+            <button onclick="switchScreen('shop')">🛒 TIENDA</button>
+            <button id="rankingBtn">🏆 RANKING</button>
+            <button onclick="showAchievementsScreen()">🏅 LOGROS</button>
         </div>
     </div>
 </div>
 
 <div id="gameScreen" class="screen">
     <div class="status-bar">
-        <span>PTS: <b id="score">0</b></span>
-        <span>TIEMPO: <b id="time">15</b></span>
-        <span>NIVEL: <b id="displayLevel">1</b></span>
+        <div class="stat-box">PUNTOS: <b id="score">0</b></div>
+        <div class="stat-box">TIEMPO: <b id="time">15</b></div>
+        <div class="stat-box">NIVEL: <b id="displayLevel">1</b></div>
     </div>
-    <div id="gameArea"></div>
+    <div id="gameArea">
+        </div>
 </div>
 
 <div id="gameOverScreen" class="screen">
-    <h2 class="neon-text-mag">FIN DEL TIEMPO</h2>
-    <h3 id="finalScore">0 pts</h3>
-    <button id="restartBtn" class="btn-giant">REINTENTAR</button>
-    <button onclick="goHome()" class="btn-outline">INICIO</button>
+    <h2 class="neon-text-mag">PARTIDA TERMINADA</h2>
+    <div class="result-card">
+        <p>Puntaje de la sesión:</p>
+        <h3 id="finalScore">0 pts</h3>
+    </div>
+    <button id="restartBtn" class="btn-giant">VOLVER A JUGAR</button>
+    <button onclick="goHome()" class="btn-outline">MENÚ PRINCIPAL</button>
 </div>
 
 <div id="shopScreen" class="screen">
-    <h2>🛒 TIENDA</h2>
-    <p>Billetera: <span id="walletAmount">0</span> pts</p>
-    <div class="shop-grid">
-        <button onclick="buySkin('var(--neon-magenta)', 0)">MAGENTA</button>
-        <button onclick="buySkin('#00fbff', 500)">CYAN</button>
-        <button onclick="buySkin('#ffcc00', 1000)">LEVIATAN</button>
-        <button onclick="buySkin('#ff5500', 2000)">INFERNO</button>
-        <button onclick="buySkin('#00aaff', 3500)">LUCIFER</button>
-        <button onclick="buySkin('#6a00ff', 5000)">MOLOCH</button>
-        <button onclick="buySkin('#ffd700', 8000)">BAPHOMET</button>
-        <button onclick="buySkin('rainbow', 12000)">ORULA</button>
+    <h2>🛒 TIENDA DE ALMAS</h2>
+    <div class="wallet-display">
+        Billetera: <span id="walletAmount">0</span> <small>PTS</small>
     </div>
-    <button onclick="goHome()" class="btn-outline">VOLVER</button>
+    
+    <div class="shop-grid">
+        <button class="shop-item" onclick="buySkin('var(--neon-magenta)', 0)">
+            MAGENTA <br> <small>(INICIAL)</small>
+        </button>
+        <button class="shop-item" onclick="buySkin('#00fbff', 500)">
+            CYAN <br> <small>500 PTS</small>
+        </button>
+        <button class="shop-item" onclick="buySkin('#ffcc00', 1000)">
+            LEVIATAN <br> <small>1000 PTS</small>
+        </button>
+        <button class="shop-item" onclick="buySkin('#ff5500', 2000)">
+            INFERNO <br> <small>2000 PTS</small>
+        </button>
+        <button class="shop-item" onclick="buySkin('#00aaff', 3500)">
+            LUCIFER <br> <small>3500 PTS</small>
+        </button>
+        <button class="shop-item" onclick="buySkin('#6a00ff', 5000)">
+            MOLOCH <br> <small>5000 PTS</small>
+        </button>
+        <button class="shop-item" onclick="buySkin('#ffd700', 8000)">
+            BAPHOMET <br> <small>8000 PTS</small>
+        </button>
+        <button class="shop-item" onclick="buySkin('rainbow', 12000)">
+            ORULA <br> <small>12000 PTS</small>
+        </button>
+    </div>
+
+    <button onclick="goHome()" class="btn-outline">REGRESAR</button>
 </div>
 
 <div id="rankingScreen" class="screen">
-    <h2>🏆 TOP 10 GLOBAL</h2>
-    <ul id="rankingList" class="ranking-list"></ul>
-    <button onclick="goHome()" class="btn-outline">VOLVER</button>
+    <h2>🏆 RANKING MUNDIAL</h2>
+    <div class="ranking-container">
+        <ul id="rankingList">
+            </ul>
+    </div>
+    <button onclick="goHome()" class="btn-outline">REGRESAR</button>
 </div>
 
 <div id="achievementsScreen" class="screen">
-    <h2>🏅 MIS LOGROS</h2>
-    <div id="achievementsList" class="achievements-container"></div>
-    <button onclick="goHome()" class="btn-outline">VOLVER</button>
+    <h2>🏅 GALERÍA DE LOGROS</h2>
+    <div id="achievementsList" class="achievements-container">
+        </div>
+    <button onclick="goHome()" class="btn-outline">REGRESAR</button>
 </div>
 
 <audio id="hitSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
 <audio id="buySound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
 
 <script>
-    function switchScreen(id){
+    // Función de navegación rápida
+    function switchScreen(screenId){
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id + "Screen").classList.add("active");
+        document.getElementById(screenId + "Screen").classList.add("active");
     }
 </script>
 <script src="script.js"></script>
