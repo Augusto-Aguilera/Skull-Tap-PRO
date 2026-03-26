@@ -1,3 +1,4 @@
+/* ... (Todo el CSS anterior se mantiene igual) ... */
 :root {
     --neon-cyan: #00fbff;
     --neon-magenta: #ff00ff;
@@ -29,58 +30,37 @@ body, html {
 
 @keyframes pulseLogo { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.03); opacity: 0.9; } }
 
-/* HUD MISIONES */
 .daily-missions-hud { position: absolute; top: 20px; right: 20px; width: 220px; background: rgba(0, 0, 0, 0.85); border-right: 4px solid var(--neon-yellow); padding: 10px; border-radius: 8px 0 0 8px; z-index: 1000; backdrop-filter: blur(5px); }
 .weekly-challenges-hud { position: absolute; top: 140px; right: 20px; width: 220px; background: rgba(0, 0, 0, 0.85); border-right: 4px solid var(--neon-cyan); padding: 10px; border-radius: 8px 0 0 8px; z-index: 1000; backdrop-filter: blur(5px); }
-
 .hud-header { font-size: 0.7rem; font-weight: bold; color: var(--neon-yellow); margin-bottom: 8px; border-bottom: 1px solid #333; }
 .weekly-challenges-hud .hud-header { color: var(--neon-cyan); }
-
 .mission-item { font-size: 0.7rem; margin-bottom: 6px; text-align: left; color: #bbb; }
 .mission-item.completed { color: var(--neon-green); text-decoration: line-through; opacity: 0.6; }
-
-/* MEJORA: STREAK BADGE */
 .streak-badge { background: linear-gradient(45deg, #ff5500, #ffcc00); color: black; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; margin: 10px auto; display: inline-block; box-shadow: 0 0 10px #ff5500; }
-
-/* BOSS BAR */
 .boss-health-container { width: 80%; max-width: 350px; margin-bottom: 15px; position: absolute; top: 80px; z-index: 100; }
 .boss-label { font-size: 0.8rem; color: var(--neon-red); font-weight: bold; text-shadow: 0 0 10px red; margin-bottom: 5px; }
 .hp-bg { background: #333; height: 12px; border-radius: 6px; overflow: hidden; }
 .hp-fill { background: linear-gradient(90deg, #ff0000, #ff6600); width: 100%; height: 100%; transition: 0.2s; }
-
-/* XP BAR */
 .xp-container { width: 80%; max-width: 400px; height: 10px; background: #222; border-radius: 5px; margin-bottom: 10px; position: relative; border: 1px solid #444; overflow: hidden; }
 .xp-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); transition: width 0.3s ease; }
 #xpText { position: absolute; width: 100%; text-align: center; font-size: 0.6rem; top: 0; line-height: 10px; color: white; font-weight: bold; text-shadow: 1px 1px 2px black; }
-
-/* MULTIPLIERS DISPLAY */
 .multipliers-display { position: absolute; top: 110px; left: 20px; display: flex; flex-direction: column; gap: 5px; z-index: 100; }
 .badge-multiplier { background: rgba(0,0,0,0.8); border: 1px solid var(--neon-yellow); color: var(--neon-yellow); padding: 5px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; animation: badgeIn 0.3s ease-out; text-shadow: 0 0 5px var(--neon-yellow); }
 @keyframes badgeIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-
-/* LEVEL UP EFFECTS */
 .level-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 9999; }
 @keyframes flashAnim { 0% { opacity: 0.8; } 100% { opacity: 0; } }
 .level-up-particle { position: absolute; pointer-events: none; z-index: 1000; border-radius: 50%; box-shadow: 0 0 10px white; }
-
-/* POWER UPS */
 .power-up { font-size: 40px; position: absolute; cursor: pointer; filter: drop-shadow(0 0 10px white); z-index: 50; }
 .pu-notice { position: absolute; top: 150px; font-weight: bold; font-size: 1.5rem; color: var(--neon-yellow); text-shadow: 0 0 15px orange; opacity: 0; transition: opacity 0.3s; }
-
-/* AUTH CONTAINER */
 .auth-container { background: rgba(20,20,20,0.8); padding: 15px; border-radius: 12px; margin-bottom: 25px; width: 100%; max-width: 300px; border: 1px solid #333; }
 .auth-container input { width: 90%; padding: 12px; margin: 6px 0; border-radius: 6px; border: 1px solid #333; background: #111; color: white; }
 .btn-group-row { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
 .status-msg { font-size: 0.75rem; color: #888; margin-top: 8px; }
-
-/* BOTONES BASE */
 button { cursor: pointer; background: transparent; transition: all 0.3s ease-out; border-style: solid; }
 .btn-giant { width: 280px; font-size: 1.6rem; padding: 20px; border: 3px solid var(--neon-green); color: var(--neon-green); border-radius: 40px; background: rgba(0,255,204,0.1); box-shadow: 0 0 20px var(--neon-green), inset 0 0 10px var(--neon-green); }
 .btn-giant:hover { background: var(--neon-green); color: #000; box-shadow: 0 0 40px var(--neon-green); transform: scale(1.05); }
-
 .menu-row { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
 .menu-row button { padding: 15px 30px; font-size: 1rem; border-radius: 25px; border-width: 2px; font-weight: bold; }
-
 .btn-cyan { border-color: var(--neon-cyan); color: var(--neon-cyan); }
 .btn-cyan:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 25px var(--neon-cyan); }
 .btn-magenta { border-color: var(--neon-magenta); color: var(--neon-magenta); }
@@ -90,44 +70,21 @@ button { cursor: pointer; background: transparent; transition: all 0.3s ease-out
 .btn-outline { border: 2px solid white; color: white; padding: 10px 20px; border-radius: 20px; margin-top: 10px; }
 .btn-mini { padding: 8px 15px; font-size: 0.75rem; border-color: var(--neon-green); color: var(--neon-green); border-width: 1px; border-radius: 4px; }
 .btn-outline-red { border-color: var(--neon-red); color: var(--neon-red); padding: 8px 15px; font-size: 0.75rem; border-width: 1px; border-radius: 4px; }
-
-/* JUEGO & ARENA */
 .status-bar { margin-bottom: 10px; font-size: 1.2rem; display: flex; gap: 20px; }
-
-#gameArea { 
-    width: 95vw; max-width: 420px; height: 50vh; 
-    border: 3px solid var(--neon-cyan); border-radius: 20px; 
-    position: relative; overflow: hidden; 
-    box-shadow: 0 0 30px var(--neon-cyan);
-    background: rgba(0,0,0,0.6) url('img/moloch.jpg'); 
-    background-size: cover; background-position: center; background-blend-mode: darken;
-}
-
+#gameArea { width: 95vw; max-width: 420px; height: 50vh; border: 3px solid var(--neon-cyan); border-radius: 20px; position: relative; overflow: hidden; box-shadow: 0 0 30px var(--neon-cyan); background: rgba(0,0,0,0.6) url('img/moloch.jpg'); background-size: cover; background-position: center; background-blend-mode: darken; }
 .target { width: 70px; height: 70px; font-size: 55px; position: absolute; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; transition: transform 0.1s; z-index: 10; }
 .target.boss { width: 160px; height: 160px; font-size: 130px; }
 .target.distraction { font-size: 50px; filter: drop-shadow(0 0 10px var(--neon-red)); animation: distractorPulse 0.4s infinite alternate; }
 .combo-hidden { visibility: hidden; }
-
 @keyframes distractorPulse { from { transform: scale(1); } to { transform: scale(1.15); } }
-
-/* FX */
 .shake { animation: shakeAnim 0.2s; }
 @keyframes shakeAnim { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(5px, 5px); } 75% { transform: translate(-5px, -5px); } }
 .particle { position: absolute; border-radius: 50%; pointer-events: none; z-index: 60; }
-
-/* TOAST LOGROS */
 .achievement-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--neon-yellow); color: black; padding: 12px 25px; border-radius: 30px; font-weight: bold; box-shadow: 0 0 20px var(--neon-yellow); z-index: 2000; animation: slideUp 0.5s ease-out; }
 @keyframes slideUp { from { bottom: -50px; opacity: 0; } to { bottom: 20px; opacity: 1; } }
-
-/* SHOP & NEON BUTTONS */
 .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; max-height: 40vh; overflow-y: auto; padding: 10px; }
-
-.btn-skin { 
-    padding: 15px; border: 2px solid #444; color: white; border-radius: 12px; font-size: 0.8rem; font-weight: bold;
-    background: rgba(255,255,255,0.05); transition: 0.3s;
-}
+.btn-skin { padding: 15px; border: 2px solid #444; color: white; border-radius: 12px; font-size: 0.8rem; font-weight: bold; background: rgba(255,255,255,0.05); transition: 0.3s; }
 .btn-skin:hover { transform: translateY(-3px); filter: brightness(1.2); }
-
 .s-magenta { border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: inset 0 0 5px var(--neon-magenta); }
 .s-cyan { border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: inset 0 0 5px var(--neon-cyan); }
 .s-green { border-color: var(--neon-green); color: var(--neon-green); box-shadow: inset 0 0 5px var(--neon-green); }
@@ -136,17 +93,19 @@ button { cursor: pointer; background: transparent; transition: all 0.3s ease-out
 .s-purple { border-color: var(--neon-purple); color: var(--neon-purple); box-shadow: inset 0 0 5px var(--neon-purple); }
 .s-gold { border-color: var(--neon-gold); color: var(--neon-gold); box-shadow: inset 0 0 5px var(--neon-gold); }
 .s-rainbow { border-image: linear-gradient(45deg, red, yellow, green, cyan, magenta) 1; animation: rainbowGlow 2s infinite linear; }
-
 @keyframes rainbowGlow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
-
-/* RESTO DE LISTAS */
 .achievements-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 500px; max-height: 50vh; overflow-y: auto; padding: 10px; }
 .achievement-card { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; border: 1px solid #333; opacity: 0.2; }
 .achievement-card.unlocked { opacity: 1; border-color: var(--neon-green); }
 .tier-facil { border-left: 4px solid var(--neon-green); }
 .tier-medio { border-left: 4px solid var(--neon-cyan); }
 .tier-dificil { border-left: 4px solid var(--neon-red); }
-
 .ranking-list { list-style: none; padding: 0; width: 100%; max-width: 320px; }
 .ranking-list li { padding: 12px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; font-family: monospace; }
 .ranking-list li:first-child { color: var(--neon-yellow); }
+
+/* NUEVOS ESTILOS TIENDA */
+.shop-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+.tab-btn { flex: 1; padding: 10px; border: 1px solid #444; color: #888; border-radius: 8px; font-weight: bold; }
+.tab-btn.active { border-color: var(--neon-cyan); color: var(--neon-cyan); background: rgba(0,251,255,0.1); }
+.btn-skin small { color: var(--neon-yellow); display: block; margin-top: 5px; font-family: monospace; }
