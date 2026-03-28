@@ -4,34 +4,39 @@
 ![License](https://img.shields.io/badge/license-MIT-magenta)
 ![Platform](https://img.shields.io/badge/platform-Mobile%20|%20Web-green)
 
-**Skull Tap PRO** es un juego de reacción rápida con estética Cyberpunk y Neón. Desafía tus reflejos eliminando calaveras antes de que el tiempo se agote, compite en el ranking mundial y personaliza tu experiencia en la tienda oficial.
+**Skull Tap PRO** es un videojuego de reacción rápida con estética Cyberpunk y Neón desarrollado íntegramente con tecnologías web modernas. Desafía tus reflejos eliminando objetivos antes de que el tiempo se agote en una experiencia de alta intensidad.
 
 ---
 
-## 🚀 Características Principales
-
-* **🕹️ Gameplay Adictivo:** Mecánica de "tap" optimizada para dispositivos móviles y escritorio.
-* **💀 Modo Supervivencia:** Un solo error (click al vacío) y el juego termina. ¡Solo para expertos!
-* **🔥 Sistema de Combos:** Multiplica tus puntos encadenando aciertos sin fallar.
-* **🛒 Tienda de Skins:** Canjea tus puntos acumulados por skins exclusivas (Magenta, Cyan, Oro).
-* **🏆 Ranking Global:** Conectado a **Supabase** para guardar tus mejores puntuaciones en tiempo real.
-* **📱 Diseño Responsivo:** Centrado absoluto y controles grandes ideales para jugar en el móvil.
-* **✨ Efectos Visuales:** Sistema de partículas de explosión y efecto *Shake* (sacudida) de pantalla al acertar.
+## 🚀 Experiencia de Juego (Gameplay)
+- **🕹️ Mecánica de Precisión:** Sistema de "tap" optimizado para latencia mínima en móviles y desktop.
+- **💀 Modo Hardcore:** Algoritmo de supervivencia donde un click al vacío termina la partida (Permadeath).
+- **🔥 Motor de Combos:** Lógica matemática para multiplicar el score basado en rachas de aciertos.
+- **🛒 Sistema de Economía:** Tienda funcional (Store) para canjear puntos acumulados por skins exclusivas.
+- **✨ Feedback Visual:** Sistema de partículas dinámicas y efectos de *Screen Shake* para mejorar el "game feel".
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
-
-* **Frontend:** HTML5, CSS3 (Flexbox, Animaciones), JavaScript Vanilla.
-* **Backend:** [Supabase](https://supabase.com/) (Autenticación y Base de Datos PostgreSQL).
-* **Despliegue:** GitHub Pages.
+## 🛠️ Stack Tecnológico & Arquitectura
+- **Frontend:** HTML5, CSS3 (Animaciones avanzadas, Flexbox y Grid).
+- **Lógica de Juego:** **JavaScript Vanilla** (Manejo de intervalos, detección de colisiones y gestión de estado).
+- **Backend as a Service (BaaS):** **[Supabase](https://supabase.com/)** para la persistencia de datos.
+- **Base de Datos:** PostgreSQL (Gestión de Ranking Global y perfiles de usuario).
+- **Despliegue:** GitHub Pages.
 
 ---
 
-## 📦 Instalación y Uso
+## 🏆 Ranking Global en Tiempo Real
+A diferencia de un juego estático, **Skull Tap PRO** está conectado a una base de datos en la nube. Esto permite:
+1. Almacenar las mejores puntuaciones de forma persistente.
+2. Generar una tabla de líderes (Leaderboard) que se actualiza automáticamente.
+3. Gestionar el inventario de skins del usuario mediante sesiones.
 
-Si quieres probar el proyecto localmente:
+---
+
+## 📦 Instalación Local
+Si quieres explorar el código o contribuir:
 
 1. Clona este repositorio:
    ```bash
-   git clone [https://github.com/TU_USUARIO/skull-tap-pro.git](https://github.com/TU_USUARIO/skull-tap-pro.git)
+   git clone [https://github.com/Augusto-Aguilera/Skull-Tap-PRO.git](https://github.com/Augusto-Aguilera/Skull-Tap-PRO.git)
